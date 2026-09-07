@@ -71,3 +71,13 @@ The rules page draws its diagrams by calling the real move generator, so the doc
 Playable and complete as a hotseat game. There is no AI opponent and no online play.
 
 Insufficient material is read narrowly for now. A game is drawn on it only when the two Popes are the last pieces on the board.
+
+## Image credits
+
+All piece images are licensed under CC BY-SA 3.0 and CC BY-SA 4.0.
+
+## Licence
+
+Copyright (C) 2026 Zee
+
+Licensed under the [GNU Affero General Public License v3.0](./LICENSE).
