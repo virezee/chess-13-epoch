@@ -11,7 +11,9 @@ export class Room extends DurableObject<Env> {
     }
     if (!active) return new Response(null, { status: 404 })
     if (this.ctx.getWebSockets().length >= 2) return new Response(null, { status: 403 })
-    const [client, server] = Object.values(new WebSocketPair())
+    const pair = new WebSocketPair()
+    const client = pair[0]
+    const server = pair[1]
     this.ctx.acceptWebSocket(server)
     await this.ctx.storage.deleteAlarm()
     const save = await this.ctx.storage.get('save')
@@ -54,7 +56,7 @@ export default {
       return new Response(null, { status: 503 })
     }
     const code = url.pathname.split('/')[1]
-    if (!/^\d{6}$/.test(code ?? '')) return new Response(null, { status: 400 })
+    if (!/^\d{6}$/u.test(code ?? '')) return new Response(null, { status: 400 })
     return env.ROOM.get(env.ROOM.idFromName(code!)).fetch(req)
   }
 }
