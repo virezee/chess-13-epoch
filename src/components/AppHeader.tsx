@@ -17,9 +17,6 @@ export function AppHeader() {
             <span className='whitespace-nowrap font-display text-[30px] leading-none text-ink'>
               Chess 13<span className='hidden sm:inline'>: Epoch</span>
             </span>
-            <span className='hidden text-[10px] uppercase tracking-[0.18em] text-ink-faint sm:inline'>
-              Hotseat
-            </span>
           </div>
         </div>
         <div className='flex items-center gap-1'>

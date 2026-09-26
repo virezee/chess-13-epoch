@@ -27,8 +27,8 @@ export class Room extends DurableObject<Env> {
     await this.ctx.storage.put('save', save)
     for (const other of this.ctx.getWebSockets()) if (other !== ws) other.send(text)
   }
-  override async webSocketClose(): Promise<void> {
-    const left = this.ctx.getWebSockets().length
+  override async webSocketClose(ws: WebSocket): Promise<void> {
+    const left = this.ctx.getWebSockets().filter(other => other !== ws).length
     if (left === 0) return this.release()
     if (left === 1) await this.ctx.storage.setAlarm(Date.now() + 60_000)
   }
