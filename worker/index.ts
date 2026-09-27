@@ -15,7 +15,6 @@ export class Room extends DurableObject<Env> {
     const active = await this.ctx.storage.get<boolean>('active')
     if (creating && active) return new Response(null, { status: 409 })
     if (!creating && !active) return new Response(null, { status: 404 })
-    await this.ctx.storage.put('active', true)
     if (this.ctx.getWebSockets().length >= 2) return new Response(null, { status: 403 })
     if (creating) await this.ctx.storage.put('active', true)
     const pair = new WebSocketPair()

@@ -1,0 +1,1 @@
+export const WORKER = 'chess-13-room.virezee.workers.dev'
