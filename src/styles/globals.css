@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   color-scheme: dark;
@@ -24,7 +24,7 @@
   --square-command: #4c3a70;
   --square-command-ink: #ded1ff;
 }
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   color-scheme: light;
   --bg: #d3cec0;
   --bg-glow: #e1ddd2;
@@ -50,25 +50,30 @@
 }
 :root {
   --coords-width: 1.4rem;
-  --square-size: min(calc((100cqw - var(--coords-width)) / 13), max(64px, calc((100vh - 9.5rem) / 13)));
+  --square-size: min(
+    calc((100cqw - var(--coords-width)) / 13),
+    max(64px, calc((100vh - 9.5rem) / 13))
+  );
   --board-size: calc(13 * var(--square-size));
   --board-pattern: repeating-conic-gradient(var(--square-light) 0% 25%, var(--square-dark) 0% 50%);
   --zone-white: #e8e2d4;
   --zone-black: #4f5765;
-  --square-selected: rgb(20 85 30 / .5);
-  --move-dest: radial-gradient(rgb(20 85 30 / .5) 19%, rgb(0 0 0 / 0) calc(19% + 1px));
-  --move-dest-capture: radial-gradient(transparent 79%, rgb(200 30 30 / .5) calc(79% + 1px));
-  --square-last: rgb(30 150 150 / .42);
-  --square-check: radial-gradient(ellipse at center,
-      rgb(255 62 48 / .95) 0%,
-      rgb(255 62 48 / .7) 25%,
-      rgb(255 62 48 / 0) 80%);
+  --square-selected: rgb(20 85 30 / 0.5);
+  --move-dest: radial-gradient(rgb(20 85 30 / 0.5) 19%, rgb(0 0 0 / 0) calc(19% + 1px));
+  --move-dest-capture: radial-gradient(transparent 79%, rgb(200 30 30 / 0.5) calc(79% + 1px));
+  --square-last: rgb(30 150 150 / 0.42);
+  --square-check: radial-gradient(
+    ellipse at center,
+    rgb(255 62 48 / 0.95) 0%,
+    rgb(255 62 48 / 0.7) 25%,
+    rgb(255 62 48 / 0) 80%
+  );
   --square-awake: #000;
   --square-riposte: #7a8794;
-  --mark-red: rgb(202 52 43 / .55);
-  --mark-yellow: rgb(216 166 40 / .55);
-  --mark-green: rgb(20 133 45 / .55);
-  --mark-blue: rgb(48 110 200 / .55);
+  --mark-red: rgb(202 52 43 / 0.55);
+  --mark-yellow: rgb(216 166 40 / 0.55);
+  --mark-green: rgb(20 133 45 / 0.55);
+  --mark-blue: rgb(48 110 200 / 0.55);
 }
 @custom-variant light (&:where([data-theme="light"] *));
 @theme inline {
@@ -124,9 +129,7 @@
   }
   body {
     background-color: var(--bg);
-    background-image: radial-gradient(110% 80% at 50% -10%,
-        var(--bg-glow) 0%,
-        var(--bg) 62%);
+    background-image: radial-gradient(110% 80% at 50% -10%, var(--bg-glow) 0%, var(--bg) 62%);
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-archivo), system-ui, sans-serif;
@@ -150,7 +153,7 @@
   }
 }
 @utility checkmate-fall {
-  animation: checkmate-fall 700ms cubic-bezier(.34, 1.1, .64, 1) both;
+  animation: checkmate-fall 700ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
 }
 @keyframes chase {
   0% {
