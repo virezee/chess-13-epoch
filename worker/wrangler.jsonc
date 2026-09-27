@@ -1,4 +1,5 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "chess-13-room",
   "main": "index.ts",
   "compatibility_date": "2026-09-22",
