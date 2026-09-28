@@ -1,11 +1,8 @@
 import type { Role } from '@/types/network'
+import { HOST, GUEST } from '@/constants/room'
 import { DurableObject } from 'cloudflare:workers'
 
-const claim = async (
-  env: Readonly<Env>,
-  req: Readonly<Request>,
-  left: number
-): Promise<Response> => {
+const claim = async (env: Env, req: Request, left: number): Promise<Response> => {
   if (left === 0) return new Response(null, { status: 503 })
   const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
   const res = await env.ROOM.get(env.ROOM.idFromName(code)).fetch(
@@ -14,7 +11,7 @@ const claim = async (
   return res.status === 409 ? claim(env, req, left - 1) : res
 }
 export class Room extends DurableObject<Env> {
-  override async fetch(req: Readonly<Request>): Promise<Response> {
+  override async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url)
     const creating = url.pathname.endsWith('/create')
     const active = await this.ctx.storage.get<boolean>('active')
@@ -23,7 +20,7 @@ export class Room extends DurableObject<Env> {
     const sockets = this.ctx.getWebSockets()
     if (sockets.length >= 2) return new Response(null, { status: 403 })
     if (creating) await this.ctx.storage.put('active', true)
-    const role: Role = sockets.some(ws => ws.deserializeAttachment() === 'host') ? 'guest' : 'host'
+    const role: Role = sockets.some(ws => ws.deserializeAttachment() === HOST) ? GUEST : HOST
     const pair = new WebSocketPair()
     const client = pair[0]
     const server = pair[1]
@@ -67,12 +64,12 @@ export class Room extends DurableObject<Env> {
   }
 }
 export default {
-  fetch(req: Request, env: Env): Promise<Response> | Response {
+  fetch(env: Env, req: Request): Promise<Response> | Response {
     const url = new URL(req.url)
     if (req.headers.get('Upgrade') !== 'websocket') return new Response(null, { status: 426 })
     if (url.pathname === '/create') return claim(env, req, 10)
     const code = url.pathname.split('/')[1]
     if (!/^\d{6}$/u.test(code ?? '')) return new Response(null, { status: 400 })
-    return env.ROOM.get(env.ROOM.idFromName(code!)).fetch(req)
+    return env.ROOM.get(env.ROOM.idFromName(code ?? '')).fetch(req)
   }
 }

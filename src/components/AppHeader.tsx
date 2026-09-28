@@ -11,13 +11,9 @@ export function AppHeader() {
   return (
     <header className='sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur'>
       <div className='mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between px-5'>
-        <div className='flex items-center gap-3'>
-          <div className='flex items-baseline gap-2.5'>
-            <span className='whitespace-nowrap font-display text-[30px] leading-none text-ink'>
-              Chess 13<span className='hidden sm:inline'>: Epoch</span>
-            </span>
-          </div>
-        </div>
+        <span className='whitespace-nowrap font-display text-[30px] leading-none text-ink'>
+          Chess 13<span className='hidden sm:inline'>: Epoch</span>
+        </span>
         <div className='flex items-center gap-1'>
           {isBoard && <PieceSetToggle />}
           <IconButton label={isBoard ? 'Rules' : 'Board'} href={isBoard ? '/rules' : '/'}>

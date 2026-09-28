@@ -125,7 +125,7 @@ export const isAssassinReachable = (
 export const threats = (
   board: Board,
   side: Side,
-  view: View = {},
+  view: View,
   isDormant: boolean,
   square: string,
   isLandingAttacked = false,

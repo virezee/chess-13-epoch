@@ -33,7 +33,6 @@ export const markColour = (event: {
       : event.altKey
         ? MARKS.blue
         : MARKS.red
-
 export const mark = (
   marks: Record<string, string>,
   square: string,
