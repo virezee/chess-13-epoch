@@ -6,17 +6,13 @@ import { POPE, EMPEROR, MARSHAL, LEGIONARY, BACK_RANK, LETTER, VALUE } from '@/c
 import { ENHANCED, RESTRICTED } from '@/constants/zone'
 import { isEnhanced } from '../engine/generate'
 
+const starting = (name: PieceName): number =>
+  name === LEGIONARY ? SIZE : BACK_RANK.filter(piece => piece === name).length
 const captured = (pieces: PieceSquares): ArmyState['captured'] =>
-  Object.entries(
-    (() => {
-      const count: Partial<Record<PieceName, number>> = { [LEGIONARY]: SIZE }
-      for (const piece of BACK_RANK) count[piece] = (count[piece] ?? 0) + 1
-      return count
-    })()
-  ).flatMap(([name, start]) =>
-    Array.from({ length: (start ?? 0) - pieces[name as PieceName].length }, (_, i) => ({
+  ([LEGIONARY, ...new Set(BACK_RANK)] as const).flatMap(name =>
+    Array.from({ length: starting(name) - pieces[name].length }, (_, i) => ({
       id: `${name}${i}`,
-      letter: LETTER[name as PieceName]
+      letter: LETTER[name]
     }))
   )
 export const fileRange = (file: number): string => {

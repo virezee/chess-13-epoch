@@ -21,13 +21,13 @@ import { isEnhanced } from './generate'
 
 const occupantAt = (occupancy: SquareOccupant, view: View, square: string): Piece | undefined => {
   if (view.moved && view.moved.square === square) return view.moved.piece
-  if (view.vacated?.includes(square)) return
+  if (view.vacated?.includes(square) ?? false) return undefined
   return occupancy[square]
 }
 const marshalAt = (side: Side, view: View, marshalSquare: string | null): string | null => {
   const moved = view.moved
   if (moved?.piece.piece === MARSHAL && moved.piece.side === side) return moved.square
-  if (marshalSquare === null || view.vacated?.includes(marshalSquare)) return null
+  if (marshalSquare === null || (view.vacated?.includes(marshalSquare) ?? false)) return null
   return marshalSquare
 }
 const hopped = (view: View, square: string): View =>

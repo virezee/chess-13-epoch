@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://chess-13-epoch.vercel.app'),
   title: { default: 'Chess 13: Epoch', template: '%s | Chess 13: Epoch' },
   description:
-    'A free chess variant played on a 13×13 board. Two players on one screen, straight in the browser. No account, no install, and the full rules are included.',
+    'A free chess variant played on a 13×13 board. Two players online, joined by a link, straight in the browser. No account, no install, and the full rules are included.',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: '/',
     title: 'Chess 13: Epoch',
     description:
-      'A free chess variant on a 13×13 board. Two players, one screen, straight in your browser.'
+      'A free chess variant on a 13×13 board. Two players online, straight in your browser.'
   },
   verification: { google: '1nchbhWBls6uLd1oBMnQJSJ581vdpM-PouP-cWlk0Kc' },
   twitter: { card: 'summary_large_image' }

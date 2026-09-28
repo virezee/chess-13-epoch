@@ -1,12 +1,9 @@
 import type { Move, Position, Result } from '@/types/game'
 import { useState } from 'react'
-import { BLACK } from '@/constants/player'
-import { AUTO } from '@/constants/display'
 import { clickSquares } from '../engine/turn'
 import { Grid } from './board/Grid'
 import { mark, markColour } from '../lib/annotation'
 import { emperorFlag, riposteFlag } from '../lib/trace'
-import { useFlip } from '@/lib/flip'
 
 type BoardProps = {
   position: Position
@@ -22,7 +19,6 @@ export function Board(props: BoardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [marks, setMarks] = useState<Record<string, string>>({})
   const [arrows, setArrows] = useState<Record<string, string>>({})
-  const isFlipped = useFlip() === AUTO && position.side === BLACK
   const select = (square: string) => {
     if (locked) return
     setMarks({})
@@ -51,7 +47,6 @@ export function Board(props: BoardProps) {
         marks={marks}
         arrows={arrows}
         trace={[...emperorFlag(position), ...riposteFlag(position)]}
-        isFlipped={isFlipped}
         result={result}
         onSelect={select}
         onMark={(square, event) => setMarks(current => mark(current, square, markColour(event)))}

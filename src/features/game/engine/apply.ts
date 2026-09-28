@@ -18,13 +18,13 @@ const board = (occupancy: SquareOccupant, awake: State['awake'], move: Move): Sq
   const next = { ...occupancy }
   const mover = next[move.from]
   delete next[move.from]
-  move.captures?.forEach(square => delete next[square])
+  for (const square of move.captures ?? []) delete next[square]
   if (move.sentinel) {
     const sentinel = next[move.sentinel.from]
     delete next[move.sentinel.from]
     if (sentinel) next[move.sentinel.to] = sentinel
   }
-  if (mover && !move.captures?.includes(move.from))
+  if (mover && !(move.captures?.includes(move.from) ?? false))
     next[move.to] = move.promotesTo
       ? move.promotesTo === EMPEROR
         ? { side: mover.side, piece: EMPEROR, awake: awake[mover.side] }
@@ -62,7 +62,7 @@ const isRiposte = (position: Position, move: Move, next: SquareOccupant): boolea
   if (!mover) return false
   const enemy = mover.side === WHITE ? BLACK : WHITE
   const marshalSq = pieces[enemy][MARSHAL][0] ?? null
-  if (marshalSq === null || move.captures?.includes(marshalSq)) return false
+  if (marshalSq === null || (move.captures?.includes(marshalSq) ?? false)) return false
   return riposteSquares(mover.side, occupancy, move).some(square =>
     isLineClear(next, { from: marshalSq, to: square })
   )
@@ -85,11 +85,11 @@ const castling = (
       left:
         next[side].left &&
         !(isMoving && move.from === wings.left.sentinel) &&
-        !move.captures?.includes(wings.left.sentinel),
+        !(move.captures?.includes(wings.left.sentinel) ?? false),
       right:
         next[side].right &&
         !(isMoving && move.from === wings.right.sentinel) &&
-        !move.captures?.includes(wings.right.sentinel)
+        !(move.captures?.includes(wings.right.sentinel) ?? false)
     }
   }
   return next

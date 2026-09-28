@@ -1,7 +1,11 @@
 import type { Role } from '@/types/network'
 import { DurableObject } from 'cloudflare:workers'
 
-const claim = async (env: Env, req: Request, left: number): Promise<Response> => {
+const claim = async (
+  env: Readonly<Env>,
+  req: Readonly<Request>,
+  left: number
+): Promise<Response> => {
   if (left === 0) return new Response(null, { status: 503 })
   const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
   const res = await env.ROOM.get(env.ROOM.idFromName(code)).fetch(
@@ -10,12 +14,12 @@ const claim = async (env: Env, req: Request, left: number): Promise<Response> =>
   return res.status === 409 ? claim(env, req, left - 1) : res
 }
 export class Room extends DurableObject<Env> {
-  override async fetch(req: Request): Promise<Response> {
+  override async fetch(req: Readonly<Request>): Promise<Response> {
     const url = new URL(req.url)
     const creating = url.pathname.endsWith('/create')
     const active = await this.ctx.storage.get<boolean>('active')
-    if (creating && active) return new Response(null, { status: 409 })
-    if (!creating && !active) return new Response(null, { status: 404 })
+    if (creating && active === true) return new Response(null, { status: 409 })
+    if (!creating && active !== true) return new Response(null, { status: 404 })
     const sockets = this.ctx.getWebSockets()
     if (sockets.length >= 2) return new Response(null, { status: 403 })
     if (creating) await this.ctx.storage.put('active', true)
@@ -29,15 +33,16 @@ export class Room extends DurableObject<Env> {
     if (creating) server.send(JSON.stringify({ code: url.pathname.split('/')[1] }))
     server.send(JSON.stringify({ role }))
     const save = await this.ctx.storage.get('save')
-    if (save) server.send(JSON.stringify({ save }))
+    if (save !== undefined) server.send(JSON.stringify({ save }))
     this.broadcast({ players: this.ctx.getWebSockets().length })
     return new Response(null, { status: 101, webSocket: client })
   }
   override async webSocketMessage(ws: WebSocket, data: string | ArrayBuffer): Promise<void> {
     const text = typeof data === 'string' ? data : new TextDecoder().decode(data)
-    const { save } = JSON.parse(text)
+    const message: unknown = JSON.parse(text)
     for (const other of this.ctx.getWebSockets()) if (other !== ws) other.send(text)
-    if (save) await this.ctx.storage.put('save', save)
+    if (typeof message === 'object' && message !== null && 'save' in message)
+      await this.ctx.storage.put('save', message.save)
   }
   override async webSocketClose(ws: WebSocket): Promise<void> {
     const others = this.ctx.getWebSockets().filter(other => other !== ws)

@@ -6,7 +6,7 @@ Chess on a 13 x 13 board with nine piece types and one commander that decides ho
 
 **Full rules: https://chess-13-epoch.vercel.app/rules**
 
-Two players, one screen. Free, runs in the browser, no account and no install.
+Two players online. One hosts a game and sends the link, the other opens it. Free, runs in the browser, no account and no install.
 
 ## The idea
 
@@ -54,13 +54,14 @@ Requires [Bun](https://bun.com).
 
 ```bash
 bun i
-bun dev          # http://localhost:3000
+bun dev                              # http://localhost:3000
 bun run lint
 bun run format:check
-bun run build    # static export to out/
+bun run build
+bunx wrangler deploy --cwd worker    # online rooms, to Cloudflare
 ```
 
-Built with Next.js 16, React 19, Tailwind CSS 4 and TypeScript. The game logic has no runtime dependencies. The site is a static export, so there is no server and no database. Games are saved to localStorage and survive a reload.
+Built with Next.js 16, React 19, Tailwind CSS 4 and TypeScript. The game logic has no runtime dependencies. Online play runs on a Cloudflare Worker with one Durable Object per room. The room keeps the game, so a reload picks up where it left off, and a player who drops out has one minute to come back before the game is lost.
 
 The rules page draws its diagrams by calling the real move generator, so the documentation cannot drift from the engine's behaviour.
 
@@ -68,7 +69,7 @@ The rules page draws its diagrams by calling the real move generator, so the doc
 
 ## Status
 
-Playable and complete as a hotseat game. There is no AI opponent and no online play.
+Playable online between two players. There is no AI opponent.
 
 Insufficient material is read narrowly for now. A game is drawn on it only when the two Popes are the last pieces on the board.
 

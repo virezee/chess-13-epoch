@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation'
 import { IconButton } from './ui/IconButton'
 import { PieceSetToggle } from './PieceSetToggle'
-import { FlipToggle } from './FlipToggle'
 import { ThemeToggle } from './ThemeToggle'
 import { cn } from '@/lib/cn'
 
@@ -21,7 +20,6 @@ export function AppHeader() {
         </div>
         <div className='flex items-center gap-1'>
           {isBoard && <PieceSetToggle />}
-          {isBoard && <FlipToggle />}
           <IconButton label={isBoard ? 'Rules' : 'Board'} href={isBoard ? '/rules' : '/'}>
             <span
               className={cn(

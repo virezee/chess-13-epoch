@@ -162,7 +162,7 @@ export const legality = (position: Position): Move[] => {
     const popeAfter = mover.piece === POPE ? move.to : pope
     if (
       dormantSq !== null &&
-      ((enemyMarshal !== null && move.captures?.includes(enemyMarshal)) ||
+      ((enemyMarshal !== null && (move.captures?.includes(enemyMarshal) ?? false)) ||
         threats(position, side, view, false, dormantSq).length > 0) &&
       threats(position, enemy, view, true, popeAfter).includes(dormantSq)
     )

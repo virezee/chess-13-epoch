@@ -1,24 +1,31 @@
 import type { Move, Save, Position } from '@/types/game'
-import { opening } from '@/features/game/engine/turn'
-import { clearSave } from '@/features/game/lib/save'
+import { HOST, GUEST } from '@/constants/room'
+import { opening } from '@/features/game/engine/opening'
 
 export const takeResign = (
   save: Save,
-  setSave: (save: Save) => void,
+  sync: (save: Save) => void,
   setPromotions: (moves: Move[]) => void,
   position: Position
 ): void => {
-  setSave({ ...save, match: { ...save.match, resigned: position.side } })
+  sync({ ...save, match: { ...save.match, resigned: position.side } })
   setPromotions([])
-  clearSave()
+}
+export const takeDraw = (
+  save: Save,
+  sync: (save: Save) => void,
+  setPromotions: (moves: Move[]) => void
+): void => {
+  sync({ ...save, match: { ...save.match, agreed: true } })
+  setPromotions([])
 }
 export const takeNewGame = (
-  setSave: (save: Save) => void,
+  save: Save,
+  sync: (save: Save) => void,
   setPromotions: (moves: Move[]) => void,
   setKey: (next: (round: number) => number) => void
 ): void => {
-  setSave(opening())
+  sync(opening(save.match.firstPlayer === HOST ? GUEST : HOST))
   setPromotions([])
   setKey(round => round + 1)
-  clearSave()
 }
