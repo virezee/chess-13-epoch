@@ -1,10 +1,12 @@
+import { WHITE, BLACK } from './player'
+
 export const COORDS = 'var(--coords-width)'
 export const SQUARE = 'var(--square-size)'
 export const BOARD = 'var(--board-size)'
 export const PATTERN = 'var(--board-pattern)'
 export const FONT_SIZE = 80
 export const BASELINE = 50 + (FONT_SIZE * .7) / 2
-export const BUFF = { white: 'var(--zone-white)', black: 'var(--zone-black)' } as const
+export const BUFF = { [WHITE]: 'var(--zone-white)', [BLACK]: 'var(--zone-black)' } as const
 export const SELECTED = 'var(--square-selected)'
 export const DEST = 'var(--move-dest)'
 export const DEST_CAPTURE = 'var(--move-dest-capture)'

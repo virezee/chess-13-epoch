@@ -7,7 +7,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { cn } from '@/lib/cn'
 
 export function AppHeader() {
-  const isBoard = usePathname() === '/'
+  const isBoard = usePathname() !== '/rules'
   return (
     <header className='sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur'>
       <div className='mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between px-5'>

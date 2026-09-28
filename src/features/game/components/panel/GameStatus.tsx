@@ -43,7 +43,7 @@ function RepetitionGauge({ count, limit }: Counter) {
 }
 function NoProgressGauge({ count, limit }: Counter) {
   const ratio = limit === 0 ? 0 : Math.min(count / limit, 1)
-  const nearLimit = ratio >= 0.8
+  const nearLimit = ratio >= .8
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <div className='flex items-baseline justify-between gap-3'>

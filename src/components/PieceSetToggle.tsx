@@ -1,5 +1,3 @@
-'use client'
-
 import { NATIVE, CLASSIC } from '@/constants/display'
 import { InfoHint } from './ui/InfoHint'
 import { useMode, setMode } from '@/lib/mode'
@@ -14,7 +12,9 @@ export function PieceSetToggle() {
         role='switch'
         aria-checked={isNative}
         aria-label='Piece set'
-        onClick={() => setMode(isNative ? CLASSIC : NATIVE)}
+        onClick={() => {
+          setMode(isNative ? CLASSIC : NATIVE)
+        }}
         className='relative h-8 w-22 cursor-pointer rounded-full border border-line bg-surface text-[9px] font-semibold uppercase tracking-[0.12em]'>
         <span
           aria-hidden

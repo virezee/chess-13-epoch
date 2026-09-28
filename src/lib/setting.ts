@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react'
 
-const read = <T extends string>(key: string, fallback: T): T => {
+const read = <T extends string>(key: string, values: readonly T[], fallback: T): T => {
   try {
-    return (localStorage.getItem(key) as T | null) ?? fallback
+    const stored = localStorage.getItem(key)
+    return values.find(value => value === stored) ?? fallback
   } catch {
     return fallback
   }
@@ -16,17 +17,20 @@ const write = (key: string, value: string): void => {
 }
 export const setting = <T extends string>(
   key: string,
+  values: readonly T[],
   fallback: T
 ): { use: () => T; set: (value: T) => void } => {
   const subscribe = (onChange: () => void): (() => void) => {
     window.addEventListener(key, onChange)
-    return () => window.removeEventListener(key, onChange)
+    return () => {
+      window.removeEventListener(key, onChange)
+    }
   }
   return {
     use: (): T =>
       useSyncExternalStore(
         subscribe,
-        (): T => read(key, fallback),
+        (): T => read(key, values, fallback),
         (): T => fallback
       ),
     set: (value: T): void => {

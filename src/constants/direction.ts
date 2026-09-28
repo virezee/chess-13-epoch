@@ -10,7 +10,7 @@ export const ORTHOGONAL = [
   [0, -1],
   [-1, 0]
 ] as const satisfies readonly (readonly [number, number])[]
-export const EVERY = [...ORTHOGONAL, ...DIAGONAL] as const satisfies readonly (readonly [
+export const EVERY = [...DIAGONAL, ...ORTHOGONAL] as const satisfies readonly (readonly [
   number,
   number
 ])[]

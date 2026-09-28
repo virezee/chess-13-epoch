@@ -8,6 +8,7 @@ import { emperorFlag, riposteFlag } from '../lib/trace'
 type BoardProps = {
   position: Position
   lastMove: Move | null
+  isFlipped: boolean
   locked: boolean
   moves: Move[]
   result: Result | null
@@ -15,7 +16,7 @@ type BoardProps = {
   onPromotions: (moves: Move[]) => void
 }
 export function Board(props: BoardProps) {
-  const { position, lastMove, locked, moves, result, onMove, onPromotions } = props
+  const { position, lastMove, isFlipped, locked, moves, result, onMove, onPromotions } = props
   const [selected, setSelected] = useState<string | null>(null)
   const [marks, setMarks] = useState<Record<string, string>>({})
   const [arrows, setArrows] = useState<Record<string, string>>({})
@@ -47,12 +48,15 @@ export function Board(props: BoardProps) {
         marks={marks}
         arrows={arrows}
         trace={[...emperorFlag(position), ...riposteFlag(position)]}
+        isFlipped={isFlipped}
         result={result}
         onSelect={select}
-        onMark={(square, event) => setMarks(current => mark(current, square, markColour(event)))}
-        onArrow={(from, to, event) =>
+        onMark={(square, event) => {
+          setMarks(current => mark(current, square, markColour(event)))
+        }}
+        onArrow={(from, to, event) => {
           setArrows(current => mark(current, `${from}-${to}`, markColour(event)))
-        }
+        }}
       />
     </div>
   )
