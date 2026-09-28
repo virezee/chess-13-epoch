@@ -1,1 +1,1 @@
-export const WORKER = 'chess-13-room.virezee.workers.dev'
+export const WORKER = process.env.NEXT_PUBLIC_WORKER ?? 'wss://chess-13-room.virezee.workers.dev'

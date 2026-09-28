@@ -6,7 +6,7 @@ import { isSave } from './save'
 const isRole = (value: unknown): value is Role => value === HOST || value === GUEST
 const isOffer = (value: unknown): value is Offer => value === DRAW || value === NEW
 export const connect = (path: string, handlers: Handlers): Connection => {
-  const ws = new WebSocket(`wss://${WORKER}/${path}`)
+  const ws = new WebSocket(`${WORKER}/${path}`)
   ws.addEventListener('message', event => {
     if (typeof event.data !== 'string') return
     const message: unknown = JSON.parse(event.data)
