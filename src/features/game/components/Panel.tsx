@@ -1,29 +1,36 @@
 import type { Move, Position, Match, Save, Result } from '@/types/game'
+import type { Role } from '@/types/network'
 import { WHITE, BLACK, NAMES } from '@/constants/player'
+import { HOST, GUEST } from '@/constants/room'
 import { REPETITION_LIMIT } from '@/constants/outcome'
 import { canSwap, takeSwap } from '../engine/apply'
 import { repetitionCount } from '../engine/result'
 import { ArmyInfo } from './panel/ArmyInfo'
 import { MoveList } from './panel/MoveList'
 import { GameStatus } from './panel/GameStatus'
-import { writeSave } from '../lib/save'
 
 type PanelProps = {
+  role: Role
+  players: number
+  seconds: number | null
   save: Save
-  setSave: (save: Save) => void
+  sync: (save: Save) => void
   position: Position
   promotions: Move[]
-  pending: 'resign' | 'new' | null
-  setPending: (pending: 'resign' | 'new' | null) => void
+  pending: 'resign' | 'draw' | 'new' | null
+  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
+  offer: { kind: 'draw' | 'new'; isMine: boolean } | null
   result: Result | null
+  onHost: (() => void) | null
   onMove: (move: Move) => void
   onResign: () => void
-  onNewGame: () => void
+  onOffer: (offer: 'draw' | 'new') => void
+  onReply: (isAccepted: boolean) => void
 }
 function Armies({ position, match }: { position: Position; match: Match }) {
   const player = {
-    [WHITE]: match.whitePlayer ?? NAMES[WHITE],
-    [BLACK]: match.whitePlayer === null ? NAMES[BLACK] : NAMES[WHITE]
+    [WHITE]: NAMES[match.whitePlayer],
+    [BLACK]: NAMES[match.whitePlayer === HOST ? GUEST : HOST]
   }
   return (
     <aside className='order-2 flex flex-col gap-4 lg:order-2 xl:order-1'>
@@ -51,7 +58,9 @@ function Promotions({ promotions, onPick }: { promotions: Move[]; onPick: (move:
         <button
           key={move.promotesTo}
           type='button'
-          onClick={() => onPick(move)}
+          onClick={() => {
+            onPick(move)
+          }}
           className='rounded-xs border border-line-strong bg-surface-2 px-2 py-1 text-[11px] capitalize text-ink-dim hover:text-ink'>
           {move.promotesTo}
         </button>
@@ -60,12 +69,14 @@ function Promotions({ promotions, onPick }: { promotions: Move[]; onPick: (move:
   )
 }
 function Control(props: PanelProps) {
-  const { save, setSave, position, promotions, result, onMove } = props
+  const { save, sync, role, position, promotions, result, onMove } = props
   return (
     <aside className='order-3 flex flex-col gap-4'>
       <Promotions promotions={promotions} onPick={onMove} />
       <MoveList pgn={save.match.pgn} toMove={position.side} />
       <GameStatus
+        players={props.players}
+        seconds={props.seconds}
         counters={{
           repetition: {
             count: repetitionCount(save.match.history.at(-1)!, save.match.history),
@@ -73,22 +84,21 @@ function Control(props: PanelProps) {
           },
           noProgress: position.state.noProgress
         }}
-        canSwap={canSwap(position, save.match)}
+        canSwap={canSwap(position, save.match) && role !== save.match.whitePlayer}
         pending={props.pending}
         setPending={props.setPending}
+        offer={props.offer}
         result={result}
+        onHost={props.onHost}
         onDecline={() => {
-          const next = { ...save, match: { ...save.match, swap: false } }
-          setSave(next)
-          writeSave(next)
+          sync({ ...save, match: { ...save.match, swap: false } })
         }}
         onAccept={() => {
-          const next = takeSwap(position, save.match, NAMES[BLACK])
-          setSave(next)
-          writeSave(next)
+          sync(takeSwap(position, save.match, role))
         }}
         onResign={props.onResign}
-        onNewGame={props.onNewGame}
+        onOffer={props.onOffer}
+        onReply={props.onReply}
       />
     </aside>
   )

@@ -3,7 +3,7 @@
   "arrowParens": "avoid",
   "bracketSameLine": true,
   "ignorePatterns": [
-    "src/app/sitemap.ts",
+    // "src/app/sitemap.ts",
     "src/constants/style.ts",
     "src/features/game/components/panel/GameStatus.tsx",
     "src/features/game/lib/annotation.ts",

@@ -1,3 +1,4 @@
+import { WHITE } from '@/constants/player'
 import { FONT_SIZE, BASELINE, BUFF, SELECTED, DEST, DEST_CAPTURE, MARKS } from '@/constants/style'
 import { arrowPoints } from '@/features/game/lib/annotation'
 
@@ -57,7 +58,7 @@ export function Legend() {
         <Mark arrow={MARKS.blue}>
           A blue arrow shows the piece defending a piece of the same colour.
         </Mark>
-        <Mark background={BUFF.white} clip='polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'>
+        <Mark background={BUFF[WHITE]} clip='polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'>
           The badge behind a piece means it is enhanced.
         </Mark>
         <Mark background='var(--square-command)' letter='M'>

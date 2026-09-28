@@ -73,7 +73,9 @@ function Squares({
         backgroundImage: PATTERN,
         backgroundSize: `calc(2 * ${SQUARE}) calc(2 * ${SQUARE})`
       }}
-      onClick={event => onSelect(squareFromEvent(event, isFlipped))}
+      onClick={event => {
+        onSelect(squareFromEvent(event, isFlipped))
+      }}
       onMouseDown={event => {
         if (event.button === 2) pressed.current = squareFromEvent(event, isFlipped)
       }}

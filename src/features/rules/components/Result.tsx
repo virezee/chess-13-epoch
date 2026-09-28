@@ -69,7 +69,7 @@ function Repetition() {
 function NoProgress() {
   return (
     <>
-      <h3 className='mt-6 font-reading text-[18px] leading-none text-ink'>The no-progress limit</h3>
+      <h3 className='mt-6 font-reading text-[18px] leading-none text-ink'>The No-Progress Limit</h3>
       <p className='mt-3 text-[15px] leading-relaxed text-ink-dim'>
         The game is drawn once neither side has made progress for long enough. Progress is a
         capture, a blast, a Legionary step or a promotion. Every turn without one adds a point to
