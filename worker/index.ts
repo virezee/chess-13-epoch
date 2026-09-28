@@ -2,13 +2,13 @@ import type { Role } from '@/types/network'
 import { HOST, GUEST } from '@/constants/room'
 import { DurableObject } from 'cloudflare:workers'
 
-const claim = async (env: Env, req: Request, left: number): Promise<Response> => {
+const claim = async (req: Request, env: Env, left: number): Promise<Response> => {
   if (left === 0) return new Response(null, { status: 503 })
   const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
   const res = await env.ROOM.get(env.ROOM.idFromName(code)).fetch(
     new Request(`${new URL(req.url).origin}/${code}/create`, req)
   )
-  return res.status === 409 ? claim(env, req, left - 1) : res
+  return res.status === 409 ? claim(req, env, left - 1) : res
 }
 export class Room extends DurableObject<Env> {
   override async fetch(req: Request): Promise<Response> {
@@ -38,8 +38,9 @@ export class Room extends DurableObject<Env> {
     const text = typeof data === 'string' ? data : new TextDecoder().decode(data)
     const message: unknown = JSON.parse(text)
     for (const other of this.ctx.getWebSockets()) if (other !== ws) other.send(text)
-    if (typeof message === 'object' && message !== null && 'save' in message)
-      await this.ctx.storage.put('save', message.save)
+    if (typeof message !== 'object' || message === null || !('save' in message)) return
+    if ('over' in message && message.over === true) await this.ctx.storage.delete('save')
+    else await this.ctx.storage.put('save', message.save)
   }
   override async webSocketClose(ws: WebSocket): Promise<void> {
     const others = this.ctx.getWebSockets().filter(other => other !== ws)
@@ -64,10 +65,10 @@ export class Room extends DurableObject<Env> {
   }
 }
 export default {
-  fetch(env: Env, req: Request): Promise<Response> | Response {
+  fetch(req: Request, env: Env): Promise<Response> | Response {
     const url = new URL(req.url)
     if (req.headers.get('Upgrade') !== 'websocket') return new Response(null, { status: 426 })
-    if (url.pathname === '/create') return claim(env, req, 10)
+    if (url.pathname === '/create') return claim(req, env, 10)
     const code = url.pathname.split('/')[1]
     if (!/^\d{6}$/u.test(code ?? '')) return new Response(null, { status: 400 })
     return env.ROOM.get(env.ROOM.idFromName(code ?? '')).fetch(req)

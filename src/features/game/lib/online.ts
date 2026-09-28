@@ -25,8 +25,8 @@ export const connect = (path: string, handlers: Handlers): Connection => {
   })
   ws.addEventListener('close', handlers.onClose)
   return {
-    send: save => {
-      ws.send(JSON.stringify({ save }))
+    send: (save, over) => {
+      ws.send(JSON.stringify({ save, over }))
     },
     offer: offer => {
       ws.send(JSON.stringify({ offer }))
