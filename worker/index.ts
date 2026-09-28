@@ -1,6 +1,6 @@
+import type { Role } from '@/types/network'
 import { DurableObject } from 'cloudflare:workers'
 
-type Role = 'host' | 'guest'
 const claim = async (env: Env, req: Request, left: number): Promise<Response> => {
   if (left === 0) return new Response(null, { status: 503 })
   const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')

@@ -1,10 +1,8 @@
 import type { PieceName, Side } from '@/types/material'
-import type { Castling, CastlingSide } from '@/types/game'
-import type { ENHANCED, RESTRICTED } from './zone'
+import type { Zone, Castling, CastlingSide } from '@/types/game'
 import { SIZE } from './board'
 import { LEAP_3_2, LEAP_2_1 } from './direction'
 
-type Zone = typeof ENHANCED | typeof RESTRICTED
 export const POPE = 'pope'
 export const EMPEROR = 'emperor'
 export const MARSHAL = 'marshal'

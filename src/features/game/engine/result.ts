@@ -1,5 +1,5 @@
 import type { Side, SquareOccupant } from '@/types/material'
-import type { Move, State, Position, Result } from '@/types/game'
+import type { Move, State, Position, Match, Result } from '@/types/game'
 import { SIZE } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
 import { POPE, LETTER } from '@/constants/piece'
@@ -7,9 +7,11 @@ import {
   CHECKMATE,
   STALEMATE,
   REPETITION,
+  RESIGNATION,
+  ABANDONMENT,
   NO_PROGRESS,
   INSUFFICIENT_MATERIAL,
-  RESIGNATION,
+  AGREEMENT,
   REPETITION_LIMIT
 } from '@/constants/outcome'
 import { makeSquare } from '../lib/coordinate'
@@ -57,13 +59,9 @@ export const repetitionKey = (side: Side, occupancy: SquareOccupant, state: Stat
   ].join(' ')
 export const repetitionCount = (key: string, history: readonly string[]): number =>
   history.filter(entry => entry === key).length
-export const result = (
-  position: Position,
-  moves: Move[],
-  history: readonly string[],
-  resigned: Side | null
-): Result | null => {
+export const result = (position: Position, moves: Move[], match: Match): Result | null => {
   const { occupancy, side, checkers, state } = position
+  const { history, resigned, abandoned, agreed } = match
   if (moves.length === 0)
     return checkers.length > 0
       ? { winner: side === WHITE ? BLACK : WHITE, reason: CHECKMATE }
@@ -73,5 +71,8 @@ export const result = (
     return { winner: side, reason: REPETITION }
   if (isInsufficientMaterial(occupancy)) return { winner: null, reason: INSUFFICIENT_MATERIAL }
   if (resigned !== null) return { winner: resigned === WHITE ? BLACK : WHITE, reason: RESIGNATION }
+  if (abandoned !== null)
+    return { winner: abandoned === WHITE ? BLACK : WHITE, reason: ABANDONMENT }
+  if (agreed) return { winner: null, reason: AGREEMENT }
   return null
 }

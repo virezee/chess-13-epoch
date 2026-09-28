@@ -1,8 +1,10 @@
 import type { Side, SquareOccupant } from '@/types/material'
 import type { Move, State, Position, Save } from '@/types/game'
+import type { Role } from '@/types/network'
 import { SIZE, FILES } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
 import { EMPEROR, LEGIONARY, BACK_RANK } from '@/constants/piece'
+import { HOST } from '@/constants/room'
 import { CHECKMATE, PLIES_PER_MOVE, NO_PROGRESS_BASE } from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
@@ -18,7 +20,7 @@ const setup = (side: Side, back: number, legionaries: number): SquareOccupant =>
   })
   return squares
 }
-export const opening = (): Save => {
+export const opening = (firstPlayer: Role = HOST): Save => {
   const occupancy = { ...setup(WHITE, 1, 3), ...setup(BLACK, SIZE, SIZE - 2) }
   const state: State = {
     awake: { [WHITE]: false, [BLACK]: false },
@@ -37,11 +39,14 @@ export const opening = (): Save => {
     state,
     match: {
       swap: true,
-      whitePlayer: null,
+      firstPlayer,
+      whitePlayer: firstPlayer,
       lastMove: null,
       history: [repetitionKey(WHITE, occupancy, state)],
       pgn: '',
-      resigned: null
+      resigned: null,
+      abandoned: null,
+      agreed: false
     }
   }
 }
@@ -55,7 +60,7 @@ export const turn = (
     move === null ? save : apply(position(save.side, save.occupancy, save.state), move, save.match)
   const next = position(played.side, played.occupancy, played.state)
   const moves = legality(next)
-  const outcome = result(next, moves, played.match.history, played.match.resigned)
+  const outcome = result(next, moves, played.match)
   const mark =
     move === null ? '' : next.checkers.length === 0 ? '' : outcome?.reason === CHECKMATE ? '#' : '+'
   return {
