@@ -83,12 +83,10 @@ export const legionary = (
   isEnhanced: boolean,
   promotions: Promotion[],
   enPassant: EnPassant | null
-): Move[] => {
-  return [
-    ...[
-      ...quiets(side, occupancy, from, isEnhanced),
-      ...captures(side, occupancy, from, enPassant)
-    ].flatMap(move => withPromotions(side, move, promotions)),
-    ...transforms(side, from, promotions)
-  ]
-}
+): Move[] => [
+  ...[
+    ...quiets(side, occupancy, from, isEnhanced),
+    ...captures(side, occupancy, from, enPassant)
+  ].flatMap(move => withPromotions(side, move, promotions)),
+  ...transforms(side, from, promotions)
+]

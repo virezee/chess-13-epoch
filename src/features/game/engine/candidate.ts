@@ -1,5 +1,5 @@
-import type { Board, Move, State, Position } from '@/types/game'
 import type { Side, PieceName, Piece } from '@/types/material'
+import type { Board, Move, State, Position } from '@/types/game'
 import { CORNERS } from '@/constants/board'
 import { POPE, EMPEROR, MARSHAL, ASSASSIN, MAGE } from '@/constants/piece'
 import { parseSquare, makeSquare } from '../lib/coordinate'

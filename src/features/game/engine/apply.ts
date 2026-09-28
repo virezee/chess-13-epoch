@@ -175,7 +175,7 @@ const game = (
 })
 export const canSwap = (position: Position, match: Match): boolean =>
   position.side === BLACK && match.swap
-export const takeSwap = (position: Position, match: Match, player: string): Save => ({
+export const takeSwap = (position: Position, match: Match, player: Match['whitePlayer']): Save => ({
   side: position.side,
   occupancy: position.occupancy,
   state: position.state,
