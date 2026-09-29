@@ -11,9 +11,9 @@ export function Board(props: BoardProps) {
   const [marks, setMarks] = useState<Record<string, string>>({})
   const [arrows, setArrows] = useState<Record<string, string>>({})
   const select = (square: string) => {
-    if (locked) return
     setMarks({})
     setArrows({})
+    if (locked) return
     const reached = moves.filter(
       move => move.from === selected && clickSquares(move).includes(square)
     )
