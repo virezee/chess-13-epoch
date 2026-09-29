@@ -230,7 +230,7 @@ export function GameStatus(
           Clocks Off · Counters
         </p>
       </header>
-      <Presence players={players} seconds={seconds} />
+      {onHost === null && <Presence players={players} seconds={seconds} />}
       <RepetitionGauge count={counters.repetition.count} limit={counters.repetition.limit} />
       <NoProgressGauge count={counters.noProgress.count} limit={counters.noProgress.limit} />
       {result === null ? (

@@ -17,6 +17,7 @@ export interface Handlers {
   onOffer: (offer: Offer) => void
   onDecline: (offer: Offer) => void
   onClose: () => void
+  onReject: () => void
 }
 export interface Dispatchers {
   link: (link: string) => void
@@ -27,6 +28,7 @@ export interface Dispatchers {
   key: Dispatch<SetStateAction<number>>
   players: (players: number) => void
   seconds: (seconds: number | null) => void
+  rejected: (rejected: boolean) => void
 }
 export interface Connection {
   send: (save: Save, over: boolean) => void
@@ -41,6 +43,7 @@ export interface Room {
   players: number
   seconds: number | null
   offer: OfferState | null
+  rejected: boolean
   setLink: (link: string | null) => void
   setOffer: (offer: OfferState | null) => void
 }

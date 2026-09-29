@@ -23,7 +23,14 @@ export const connect = (path: string, handlers: Handlers): Connection => {
     else if ('offer' in message && isOffer(message.offer)) handlers.onOffer(message.offer)
     else if ('decline' in message && isOffer(message.decline)) handlers.onDecline(message.decline)
   })
-  ws.addEventListener('close', handlers.onClose)
+  let isOpen = false
+  ws.addEventListener('open', () => {
+    isOpen = true
+  })
+  ws.addEventListener('close', () => {
+    if (isOpen) handlers.onClose()
+    else handlers.onReject()
+  })
   return {
     send: (save, over) => {
       ws.send(JSON.stringify({ save, over }))

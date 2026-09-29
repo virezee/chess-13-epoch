@@ -21,9 +21,8 @@ const captured = (pieces: PieceSquares): ArmyState['captured'] =>
     Array.from(
       {
         length:
-          name === LEGIONARY
-            ? SIZE
-            : BACK_RANK.filter(piece => piece === name).length - pieces[name].length
+          (name === LEGIONARY ? SIZE : BACK_RANK.filter(piece => piece === name).length) -
+          pieces[name].length
       },
       (_, i) => ({
         id: `${name}${i}`,

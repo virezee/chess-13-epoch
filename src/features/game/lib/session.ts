@@ -41,6 +41,9 @@ const listen = (role: RefObject<Role | null>, set: Dispatchers): Handlers => ({
   },
   onClose: () => {
     set.players(0)
+  },
+  onReject: () => {
+    set.rejected(true)
   }
 })
 const useCountdown = (): [number | null, (seconds: number | null) => void] => {
@@ -72,6 +75,7 @@ export const useRoom = (
   const [players, setPlayers] = useState(0)
   const [seconds, setSeconds] = useCountdown()
   const [offer, setOffer] = useState<OfferState | null>(null)
+  const [rejected, setRejected] = useState(false)
   useEffect(() => {
     const room =
       path === undefined
@@ -86,7 +90,8 @@ export const useRoom = (
               promotions: setPromotions,
               key: setKey,
               players: setPlayers,
-              seconds: setSeconds
+              seconds: setSeconds,
+              rejected: setRejected
             })
           )
     connection.current = room
@@ -94,5 +99,5 @@ export const useRoom = (
       room?.leave()
     }
   }, [path, setSave, setPromotions, setKey, setSeconds])
-  return { connection, role, link, players, seconds, offer, setLink, setOffer }
+  return { connection, role, link, players, seconds, offer, rejected, setLink, setOffer }
 }
