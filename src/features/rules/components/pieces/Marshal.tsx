@@ -384,10 +384,11 @@ function EnPrise() {
       </div>
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
         A Mage blasting its own never opens a riposte, whatever the Marshal sees. The Assassin is
-        safe only when it blocks the Marshal&apos;s path to the square where the capture happened.
-        If it does not, the Marshal may capture it, and this is the one time an Assassin can be
-        captured right after capturing, since the riposte creates an attack the landing square did
-        not have before.
+        safe when it blocks the Marshal&apos;s path to the square where the capture happened, or
+        when it lands on a square off the Marshal&apos;s lines. Otherwise the Marshal may capture
+        it, since the riposte creates an attack the landing square did not have before. That is one
+        of only two ways an Assassin can be captured right after capturing. The other is a dormant
+        Emperor woken by the landing, described under the Emperor.
       </p>
     </>
   )
