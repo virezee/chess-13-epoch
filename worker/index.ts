@@ -16,7 +16,13 @@ export class Room extends DurableObject<Env> {
     const creating = url.pathname.endsWith('/create')
     const active = await this.ctx.storage.get<boolean>('active')
     if (creating && active === true) return new Response(null, { status: 409 })
-    if (!creating && active !== true) return new Response(null, { status: 404 })
+    if (!creating && active !== true) {
+      const pair = new WebSocketPair()
+      pair[1].accept()
+      pair[1].send(JSON.stringify({ rejected: true }))
+      pair[1].close()
+      return new Response(null, { status: 101, webSocket: pair[0] })
+    }
     const sockets = this.ctx.getWebSockets()
     if (sockets.length >= 2) return new Response(null, { status: 403 })
     if (creating) await this.ctx.storage.put('active', true)

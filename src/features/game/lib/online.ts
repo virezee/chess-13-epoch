@@ -22,14 +22,11 @@ export const connect = (path: string, handlers: Handlers): Connection => {
     else if ('abandoned' in message && message.abandoned === true) handlers.onAbandoned()
     else if ('offer' in message && isOffer(message.offer)) handlers.onOffer(message.offer)
     else if ('decline' in message && isOffer(message.decline)) handlers.onDecline(message.decline)
+    else if ('rejected' in message && message.rejected === true) handlers.onReject()
   })
-  let isOpen = false
-  ws.addEventListener('open', () => {
-    isOpen = true
-  })
+  let isLeaving = false
   ws.addEventListener('close', () => {
-    if (isOpen) handlers.onClose()
-    else handlers.onReject()
+    if (!isLeaving) handlers.onClose()
   })
   return {
     send: (save, over) => {
@@ -42,6 +39,7 @@ export const connect = (path: string, handlers: Handlers): Connection => {
       ws.send(JSON.stringify({ decline: offer }))
     },
     leave: () => {
+      isLeaving = true
       ws.close()
     }
   }
