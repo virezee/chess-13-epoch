@@ -238,7 +238,7 @@ export function GameStatus(
           canSwap ? (
             <Prompt label='Swap Sides?' onDecline={onDecline} onAccept={onAccept} />
           ) : (
-            <Controls {...rest} />
+            players >= 2 && <Controls {...rest} />
           )
         ) : (
           <div className='border-t border-line px-3.5 py-3'>

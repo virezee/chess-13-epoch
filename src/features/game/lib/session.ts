@@ -22,6 +22,7 @@ const listen = (role: RefObject<Role | null>, set: Dispatchers): Handlers => ({
   },
   onPlayers: (players, remaining) => {
     set.players(players)
+    if (players >= 2) set.link(null)
     set.seconds(remaining === null ? null : Math.ceil(remaining / 1000))
   },
   onAbandoned: () => {

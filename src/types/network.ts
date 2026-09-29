@@ -20,7 +20,7 @@ export interface Handlers {
   onReject: () => void
 }
 export interface Dispatchers {
-  link: (link: string) => void
+  link: (link: string | null) => void
   role: (role: Role) => void
   save: Dispatch<SetStateAction<Save>>
   offer: (offer: OfferState | null) => void

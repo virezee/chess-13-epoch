@@ -33,7 +33,7 @@ function Copy({ link }: { link: string }) {
 }
 export function Invite({ link, onClose }: { link: string; onClose: () => void }) {
   return (
-    <div className='fixed inset-0 z-20 grid place-items-center bg-bg/70 px-4 backdrop-blur-[2px]'>
+    <div className='fixed inset-0 z-20 grid place-items-center bg-bg/70 px-4 backdrop-blur-[1px]'>
       <section className='w-full max-w-sm rounded border border-line bg-surface px-4 py-4'>
         <p className='text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
           Invite A Player
