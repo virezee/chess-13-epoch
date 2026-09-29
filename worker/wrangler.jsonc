@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "chess-13-room",
+  "name": "chess-13-epoch-room",
   "main": "index.ts",
   "compatibility_date": "2026-09-22",
   "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
