@@ -1,7 +1,7 @@
 import type { Message, Transcript } from '@/types/tutor'
 import { useState, useEffect } from 'react'
 import { TUTOR } from '@/constants/storage'
-import { EMPTY } from '../constants/state'
+import { EMPTY, NOTICE } from '../constants/state'
 import { USER, ASSISTANT } from '@/constants/chat'
 import { ask } from '../lib/question'
 
