@@ -1,5 +1,5 @@
-import type { Move, Position, Match, Save, Result } from '@/types/game'
-import type { Role } from '@/types/network'
+import type { Move, Position, Match } from '@/types/game'
+import type { PanelProps } from '../types/props'
 import { WHITE, BLACK, NAMES } from '@/constants/player'
 import { HOST, GUEST } from '@/constants/room'
 import { REPETITION_LIMIT } from '@/constants/outcome'
@@ -9,24 +9,6 @@ import { ArmyInfo } from './panel/ArmyInfo'
 import { MoveList } from './panel/MoveList'
 import { GameStatus } from './panel/GameStatus'
 
-type PanelProps = {
-  role: Role
-  players: number
-  seconds: number | null
-  save: Save
-  sync: (save: Save) => void
-  position: Position
-  promotions: Move[]
-  pending: 'resign' | 'draw' | 'new' | null
-  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
-  offer: { kind: 'draw' | 'new'; isMine: boolean } | null
-  result: Result | null
-  onHost: (() => void) | null
-  onMove: (move: Move) => void
-  onResign: () => void
-  onOffer: (offer: 'draw' | 'new') => void
-  onReply: (isAccepted: boolean) => void
-}
 function Armies({ position, match }: { position: Position; match: Match }) {
   const player = {
     [WHITE]: NAMES[match.whitePlayer],

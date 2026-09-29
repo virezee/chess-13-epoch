@@ -1,17 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Counter, Result } from '@/types/game'
 import type { GameCounters } from '@/types/panel'
+import type { ControlsProps } from '../../types/props'
 import { useEffect } from 'react'
 import { cn } from '@/lib/cn'
 
-type ControlsProps = {
-  pending: 'resign' | 'draw' | 'new' | null
-  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
-  offer: { kind: 'draw' | 'new'; isMine: boolean } | null
-  onResign: () => void
-  onOffer: (offer: 'draw' | 'new') => void
-  onReply: (isAccepted: boolean) => void
-}
 function Presence({ players, seconds }: { players: number; seconds: number | null }) {
   if (players >= 2) return null
   return (
@@ -130,10 +123,10 @@ function Prompt({
   )
 }
 function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: ControlsProps) {
-  if (offer?.isMine === false)
+  if (offer?.outgoing === false)
     return (
       <Prompt
-        label={offer.kind === 'draw' ? 'Accept A Draw?' : 'Accept A New Game?'}
+        label={offer.offer === 'draw' ? 'Accept A Draw?' : 'Accept A New Game?'}
         onDecline={() => {
           onReply(false)
         }}
@@ -145,7 +138,7 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
   if (offer !== null)
     return (
       <p className='border-t border-line px-3.5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
-        {offer.kind === 'draw' ? 'Draw' : 'New Game'} Offered · Waiting
+        {offer.offer === 'draw' ? 'Draw' : 'New Game'} Offered · Waiting
       </p>
     )
   if (pending !== null)

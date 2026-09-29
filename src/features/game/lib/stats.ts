@@ -1,4 +1,4 @@
-import type { Side, PieceName, PieceSquares } from '@/types/material'
+import type { Side, PieceSquares } from '@/types/material'
 import type { Position } from '@/types/game'
 import type { ArmyState } from '@/types/panel'
 import { SIZE, FILES, COMMAND_SQUARE } from '@/constants/board'
@@ -6,14 +6,20 @@ import { POPE, EMPEROR, MARSHAL, LEGIONARY, BACK_RANK, LETTER, VALUE } from '@/c
 import { ENHANCED, RESTRICTED } from '@/constants/zone'
 import { isEnhanced } from '../engine/generate'
 
-const starting = (name: PieceName): number =>
-  name === LEGIONARY ? SIZE : BACK_RANK.filter(piece => piece === name).length
 const captured = (pieces: PieceSquares): ArmyState['captured'] =>
   ([LEGIONARY, ...new Set(BACK_RANK)] as const).flatMap(name =>
-    Array.from({ length: starting(name) - pieces[name].length }, (_, i) => ({
-      id: `${name}${i}`,
-      letter: LETTER[name]
-    }))
+    Array.from(
+      {
+        length:
+          name === LEGIONARY
+            ? SIZE
+            : BACK_RANK.filter(piece => piece === name).length - pieces[name].length
+      },
+      (_, i) => ({
+        id: `${name}${i}`,
+        letter: LETTER[name]
+      })
+    )
   )
 export const fileRange = (file: number): string => {
   const first = Math.max(0, file - 1)

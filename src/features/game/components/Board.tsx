@@ -1,20 +1,10 @@
-import type { Move, Position, Result } from '@/types/game'
+import type { BoardProps } from '../types/props'
 import { useState } from 'react'
 import { clickSquares } from '../engine/turn'
 import { Grid } from './board/Grid'
 import { mark, markColour } from '../lib/annotation'
 import { emperorFlag, riposteFlag } from '../lib/trace'
 
-type BoardProps = {
-  position: Position
-  lastMove: Move | null
-  isFlipped: boolean
-  locked: boolean
-  moves: Move[]
-  result: Result | null
-  onMove: (move: Move) => void
-  onPromotions: (moves: Move[]) => void
-}
 export function Board(props: BoardProps) {
   const { position, lastMove, isFlipped, locked, moves, result, onMove, onPromotions } = props
   const [selected, setSelected] = useState<string | null>(null)

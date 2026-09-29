@@ -1,32 +1,11 @@
-import type { Dispatch, SetStateAction, RefObject } from 'react'
+import type { SetStateAction, Dispatch, RefObject } from 'react'
 import type { Move, Save } from '@/types/game'
-import type { Role, Offer, Handlers, Connection } from '@/types/network'
+import type { Role, OfferState, Handlers, Dispatchers, Connection, Room } from '@/types/network'
 import { useState, useEffect, useRef } from 'react'
 import { WHITE, BLACK } from '@/constants/player'
 import { connect } from './online'
 
-type Proposal = { kind: Offer; isMine: boolean } | null
-type Setters = {
-  save: Dispatch<SetStateAction<Save>>
-  promotions: (moves: Move[]) => void
-  key: Dispatch<SetStateAction<number>>
-  role: (role: Role) => void
-  link: (link: string) => void
-  players: (players: number) => void
-  seconds: (seconds: number | null) => void
-  offer: (offer: Proposal) => void
-}
-type Room = {
-  connection: RefObject<Connection | null>
-  role: Role | null
-  link: string | null
-  players: number
-  seconds: number | null
-  offer: Proposal
-  setLink: (link: string | null) => void
-  setOffer: (offer: Proposal) => void
-}
-const listen = (role: RefObject<Role | null>, set: Setters): Handlers => ({
+const listen = (role: RefObject<Role | null>, set: Dispatchers): Handlers => ({
   onCode: code => {
     set.link(`${window.location.origin}/${code}`)
     window.history.replaceState(null, '', `/${code}`)
@@ -54,8 +33,8 @@ const listen = (role: RefObject<Role | null>, set: Setters): Handlers => ({
       }
     }))
   },
-  onOffer: kind => {
-    set.offer({ kind, isMine: false })
+  onOffer: offer => {
+    set.offer({ offer, outgoing: false })
   },
   onDecline: () => {
     set.offer(null)
@@ -68,14 +47,16 @@ const useCountdown = (): [number | null, (seconds: number | null) => void] => {
   const [seconds, setSeconds] = useState<number | null>(null)
   const isCounting = seconds !== null
   useEffect(() => {
-    if (!isCounting) return undefined
-    const timer = setInterval(() => {
-      setSeconds(current => (current === null ? null : Math.max(current - 1, 0)))
-    }, 1000)
-    return () => {
-      clearInterval(timer)
+    const timer = isCounting
+      ? setInterval(() => {
+          setSeconds(current => (current === null ? null : Math.max(current - 1, 0)))
+        }, 1000)
+      : null
+    return (): void => {
+      if (timer !== null) clearInterval(timer)
     }
   }, [isCounting])
+
   return [seconds, setSeconds]
 }
 export const useRoom = (
@@ -90,25 +71,27 @@ export const useRoom = (
   const [link, setLink] = useState<string | null>(null)
   const [players, setPlayers] = useState(0)
   const [seconds, setSeconds] = useCountdown()
-  const [offer, setOffer] = useState<Proposal>(null)
+  const [offer, setOffer] = useState<OfferState | null>(null)
   useEffect(() => {
-    if (path === undefined) return undefined
-    const room = connect(
-      path,
-      listen(currentRole, {
-        save: setSave,
-        promotions: setPromotions,
-        key: setKey,
-        role: setRole,
-        link: setLink,
-        players: setPlayers,
-        seconds: setSeconds,
-        offer: setOffer
-      })
-    )
+    const room =
+      path === undefined
+        ? null
+        : connect(
+            path,
+            listen(currentRole, {
+              link: setLink,
+              role: setRole,
+              save: setSave,
+              offer: setOffer,
+              promotions: setPromotions,
+              key: setKey,
+              players: setPlayers,
+              seconds: setSeconds
+            })
+          )
     connection.current = room
-    return () => {
-      room.leave()
+    return (): void => {
+      room?.leave()
     }
   }, [path, setSave, setPromotions, setKey, setSeconds])
   return { connection, role, link, players, seconds, offer, setLink, setOffer }

@@ -1,5 +1,5 @@
 import type { ReactNode, MouseEvent } from 'react'
-import type { Move, Trace, Position, Result } from '@/types/game'
+import type { GridProps } from '../../types/props'
 import { useState, useRef, useEffect } from 'react'
 import { FILES, RANKS, COMMAND_SQUARE } from '@/constants/board'
 import { POPE } from '@/constants/piece'
@@ -10,20 +10,6 @@ import { Highlights } from './Highlights'
 import { squareFromEvent, remapIds, translate } from '../../lib/layout'
 import { cn } from '@/lib/cn'
 
-type GridProps = {
-  position: Position
-  lastMove: Move | null
-  selected: string | null
-  targets: string[]
-  marks: Record<string, string>
-  arrows: Record<string, string>
-  trace: Trace[]
-  isFlipped: boolean
-  result: Result | null
-  onSelect: (square: string) => void
-  onMark: (square: string, event: MouseEvent<HTMLDivElement>) => void
-  onArrow: (from: string, to: string, event: MouseEvent<HTMLDivElement>) => void
-}
 function Files({ isFlipped }: { isFlipped: boolean }) {
   return (
     <div
@@ -129,7 +115,7 @@ function Layers({
   onSelect,
   onMark,
   onArrow
-}: GridProps & { ids: Map<string, number>; snap: Move | null; isAnimated: boolean }) {
+}: GridProps & { ids: Map<string, number>; snap: GridProps['lastMove']; isAnimated: boolean }) {
   const { pieces, occupancy, side, checkers, enhanced } = position
   const check = checkers.length === 0 ? null : pieces[side][POPE][0]!
   return (
@@ -162,7 +148,7 @@ export function Grid({ lastMove, isFlipped, ...rest }: GridProps) {
   const { occupancy } = rest.position
   const [prev, setPrev] = useState({ move: lastMove, occupancy })
   const [keys, setKeys] = useState(() => remapIds(new Map<string, number>(), occupancy, null, 0))
-  const [snap, setSnap] = useState<Move | null>(null)
+  const [snap, setSnap] = useState<GridProps['lastMove']>(null)
   const [orientation, setOrientation] = useState({ flipped: isFlipped, immediate: false })
   if (prev.move !== lastMove || prev.occupancy !== occupancy) {
     const played = prev.move === lastMove ? null : lastMove

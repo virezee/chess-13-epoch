@@ -25,6 +25,7 @@
   ],
   "rules": {
     "import/exports-last": "error",
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
     "react/react-in-jsx-scope": "allow",
     "typescript/prefer-readonly-parameter-types": "allow",
     "typescript/switch-exhaustiveness-check": "allow"
