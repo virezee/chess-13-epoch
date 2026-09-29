@@ -2,8 +2,18 @@ import type { Side, PieceSquares } from '@/types/material'
 import type { Position } from '@/types/game'
 import type { ArmyState } from '@/types/panel'
 import { SIZE, FILES, COMMAND_SQUARE } from '@/constants/board'
-import { POPE, EMPEROR, MARSHAL, LEGIONARY, BACK_RANK, LETTER, VALUE } from '@/constants/piece'
-import { ENHANCED, RESTRICTED } from '@/constants/zone'
+import {
+  POPE,
+  EMPEROR,
+  MARSHAL,
+  LEGIONARY,
+  DORMANT,
+  AWAKE,
+  BACK_RANK,
+  LETTER,
+  VALUE
+} from '@/constants/piece'
+import { ENHANCED, RESTRICTED, FULL, PARTIAL, NONE } from '@/constants/zone'
 import { isEnhanced } from '../engine/generate'
 
 const captured = (pieces: PieceSquares): ArmyState['captured'] =>
@@ -50,10 +60,9 @@ export const army = (position: Position, side: Side, player: string): ArmyState 
   return {
     player,
     side,
-    emperor: emperorSq === null ? null : occupancy[emperorSq]?.awake === true ? 'awake' : 'dormant',
+    emperor: emperorSq === null ? null : occupancy[emperorSq]?.awake === true ? AWAKE : DORMANT,
     marshalSquare,
-    commandZone:
-      marshalSquare === null ? 'none' : marshalSquare === COMMAND_SQUARE ? 'full' : 'partial',
+    commandZone: marshalSquare === null ? NONE : marshalSquare === COMMAND_SQUARE ? FULL : PARTIAL,
     pieceCount: remaining.length,
     enhancedCount: remaining.filter(([square]) => isEnhanced(marshalSquare, square)).length,
     captured: captured(pieces[side]),

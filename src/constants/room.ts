@@ -1,4 +1,6 @@
+export const CREATE = 'create'
 export const HOST = 'host'
 export const GUEST = 'guest'
+export const RESIGN = 'resign'
 export const DRAW = 'draw'
 export const NEW = 'new'

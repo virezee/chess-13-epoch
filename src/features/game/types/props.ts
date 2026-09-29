@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import type { Side } from '@/types/material'
 import type { Move, Trace, Position, Save, Result } from '@/types/game'
 import type { Role, OfferState, Room } from '@/types/network'
+import type { RESIGN, DRAW, NEW } from '@/constants/room'
 
 export type Game = {
   path: string | undefined
@@ -10,8 +11,8 @@ export type Game = {
   sync: (save: Save) => void
   promotions: Move[]
   setPromotions: (moves: Move[]) => void
-  pending: 'resign' | 'draw' | 'new' | null
-  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
+  pending: typeof RESIGN | typeof DRAW | typeof NEW | null
+  setPending: (pending: typeof RESIGN | typeof DRAW | typeof NEW | null) => void
   key: number
   room: Room
   position: Position
@@ -53,21 +54,21 @@ export type PanelProps = {
   sync: (save: Save) => void
   position: Position
   promotions: Move[]
-  pending: 'resign' | 'draw' | 'new' | null
-  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
+  pending: typeof RESIGN | typeof DRAW | typeof NEW | null
+  setPending: (pending: typeof RESIGN | typeof DRAW | typeof NEW | null) => void
   offer: OfferState | null
   result: Result | null
   onHost: (() => void) | null
   onMove: (move: Move) => void
   onResign: () => void
-  onOffer: (offer: 'draw' | 'new') => void
+  onOffer: (offer: typeof DRAW | typeof NEW) => void
   onReply: (isAccepted: boolean) => void
 }
 export type ControlsProps = {
-  pending: 'resign' | 'draw' | 'new' | null
-  setPending: (pending: 'resign' | 'draw' | 'new' | null) => void
+  pending: typeof RESIGN | typeof DRAW | typeof NEW | null
+  setPending: (pending: typeof RESIGN | typeof DRAW | typeof NEW | null) => void
   offer: OfferState | null
   onResign: () => void
-  onOffer: (offer: 'draw' | 'new') => void
+  onOffer: (offer: typeof DRAW | typeof NEW) => void
   onReply: (isAccepted: boolean) => void
 }

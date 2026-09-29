@@ -2,7 +2,7 @@ import type { Move, Save } from '@/types/game'
 import type { Game, BoardProps, PanelProps } from '../types/props'
 import { useState, useMemo } from 'react'
 import { WHITE, BLACK } from '@/constants/player'
-import { HOST, DRAW } from '@/constants/room'
+import { CREATE, HOST, RESIGN, DRAW, NEW } from '@/constants/room'
 import { canSwap } from '@/features/game/engine/apply'
 import { opening } from '@/features/game/engine/opening'
 import { turn } from '@/features/game/engine/turn'
@@ -13,7 +13,7 @@ export const useGame = (code: string | undefined): Game => {
   const [path, setPath] = useState(code)
   const [save, setSave] = useState<Save>(opening)
   const [promotions, setPromotions] = useState<Move[]>([])
-  const [pending, setPending] = useState<'resign' | 'draw' | 'new' | null>(null)
+  const [pending, setPending] = useState<typeof RESIGN | typeof DRAW | typeof NEW | null>(null)
   const [key, setKey] = useState(0)
   const room = useRoom(path, setSave, setPromotions, setKey)
   const { position, moves, result } = useMemo(() => turn(save, null), [save])
@@ -92,7 +92,7 @@ export const panelProps = (game: ReturnType<typeof useGame>): PanelProps => {
     onHost:
       path === undefined
         ? () => {
-            setPath('create')
+            setPath(CREATE)
           }
         : null,
     onMove: game.playMove,

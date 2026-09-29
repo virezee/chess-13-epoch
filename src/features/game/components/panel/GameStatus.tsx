@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { RESIGN, DRAW, NEW } from '@/constants/room'
 import type { Counter, Result } from '@/types/game'
 import type { GameCounters } from '@/types/panel'
 import type { ControlsProps } from '../../types/props'
@@ -126,7 +127,7 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
   if (offer?.outgoing === false)
     return (
       <Prompt
-        label={offer.offer === 'draw' ? 'Accept A Draw?' : 'Accept A New Game?'}
+        label={offer.offer === DRAW ? 'Accept A Draw?' : 'Accept A New Game?'}
         onDecline={() => {
           onReply(false)
         }}
@@ -138,7 +139,7 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
   if (offer !== null)
     return (
       <p className='border-t border-line px-3.5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
-        {offer.offer === 'draw' ? 'Draw' : 'New Game'} Offered · Waiting
+        {offer.offer === DRAW ? 'Draw' : 'New Game'} Offered · Waiting
       </p>
     )
   if (pending !== null)
@@ -150,7 +151,7 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
         }}
         onAccept={() => {
           setPending(null)
-          if (pending === 'resign') onResign()
+          if (pending === RESIGN) onResign()
           else onOffer(pending)
         }}
       />
@@ -158,13 +159,13 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <div className='flex gap-2'>
-        {(['resign', 'draw'] as const).map(choice => (
+        {([RESIGN, DRAW] as const).map(choice => (
           <Action
             key={choice}
             onClick={() => {
               setPending(choice)
             }}>
-            {choice === 'resign' ? 'Resign' : 'Draw'}
+            {choice === RESIGN ? 'Resign' : 'Draw'}
           </Action>
         ))}
       </div>
@@ -194,7 +195,7 @@ function Outcome({ result, ...controls }: ControlsProps & { result: Result }) {
           <div className='mt-2 flex'>
             <Action
               onClick={() => {
-                controls.onOffer('new')
+                controls.onOffer(NEW)
               }}>
               New Game
             </Action>

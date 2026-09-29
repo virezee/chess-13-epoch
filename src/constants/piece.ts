@@ -14,6 +14,8 @@ export const MAGE = 'mage'
 export const HERALD = 'herald'
 export const TEMPLAR = 'templar'
 export const LEGIONARY = 'legionary'
+export const DORMANT = 'dormant'
+export const AWAKE = 'awake'
 export const REACH = {
   [ASSASSIN]: {
     [ENHANCED]: { reach: SIZE },
