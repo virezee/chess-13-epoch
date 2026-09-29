@@ -71,8 +71,8 @@ export const result = (position: Position, moves: Move[], match: Match): Result 
     return { winner: side, reason: REPETITION }
   if (isInsufficientMaterial(occupancy)) return { winner: null, reason: INSUFFICIENT_MATERIAL }
   if (resigned !== null) return { winner: resigned === WHITE ? BLACK : WHITE, reason: RESIGNATION }
+  if (agreed) return { winner: null, reason: AGREEMENT }
   if (abandoned !== null)
     return { winner: abandoned === WHITE ? BLACK : WHITE, reason: ABANDONMENT }
-  if (agreed) return { winner: null, reason: AGREEMENT }
   return null
 }

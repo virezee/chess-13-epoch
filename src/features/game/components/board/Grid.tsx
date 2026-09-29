@@ -151,7 +151,8 @@ export function Grid({ lastMove, isFlipped, ...rest }: GridProps) {
   const [snap, setSnap] = useState<GridProps['lastMove']>(null)
   const [orientation, setOrientation] = useState({ flipped: isFlipped, immediate: false })
   if (prev.move !== lastMove || prev.occupancy !== occupancy) {
-    const played = prev.move === lastMove ? null : lastMove
+    const played =
+      prev.move?.from === lastMove?.from && prev.move?.to === lastMove?.to ? null : lastMove
     setPrev({ move: lastMove, occupancy })
     setKeys(current => remapIds(current.ids, occupancy, played, current.lastId))
     setSnap(played)

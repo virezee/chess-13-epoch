@@ -45,12 +45,16 @@ export class Room extends DurableObject<Env> {
     const message: unknown = JSON.parse(text)
     for (const other of this.ctx.getWebSockets()) if (other !== ws) other.send(text)
     if (typeof message !== 'object' || message === null || !('save' in message)) return
-    if ('over' in message && message.over === true) await this.ctx.storage.delete('save')
+    const isOver = 'over' in message && message.over === true
+    await this.ctx.storage.put('over', isOver)
+    if (isOver) await this.ctx.storage.delete('save')
     else await this.ctx.storage.put('save', message.save)
   }
   override async webSocketClose(ws: WebSocket): Promise<void> {
     const others = this.ctx.getWebSockets().filter(other => other !== ws)
     if (others.length === 0) return this.release()
+    const isOver = await this.ctx.storage.get<boolean>('over')
+    if (isOver === true) return this.ctx.storage.setAlarm(Date.now())
     const deadline = Date.now() + 60_000
     await this.ctx.storage.setAlarm(deadline)
     for (const other of others)
