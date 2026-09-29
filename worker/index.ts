@@ -1,7 +1,18 @@
 import type { Role } from '@/types/network'
 import { HOST, GUEST } from '@/constants/room'
 import { DurableObject } from 'cloudflare:workers'
+import { tutor } from './tutor'
 
+const CORS = {
+  'access-control-allow-origin': 'https://chess-13-epoch.vercel.app',
+  'access-control-allow-methods': 'POST',
+  'access-control-allow-headers': 'content-type'
+}
+const withCors = async (res: Promise<Response>): Promise<Response> => {
+  const response = await res
+  for (const [name, value] of Object.entries(CORS)) response.headers.set(name, value)
+  return response
+}
 const claim = async (req: Request, env: Env, left: number): Promise<Response> => {
   if (left === 0) return new Response(null, { status: 503 })
   const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
@@ -77,6 +88,10 @@ export class Room extends DurableObject<Env> {
 export default {
   fetch(req: Request, env: Env): Promise<Response> | Response {
     const url = new URL(req.url)
+    if (url.pathname === '/tutor') {
+      if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
+      return withCors(tutor(req, env))
+    }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response(null, { status: 426 })
     if (url.pathname === '/create') return claim(req, env, 10)
     const code = url.pathname.split('/')[1]

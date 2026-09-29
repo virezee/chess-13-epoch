@@ -4,6 +4,7 @@ import { ContextMenuGuard } from '@/components/ContextMenuGuard'
 import { ThemeProvider } from 'next-themes'
 import { THEME } from '@/constants/storage'
 import { AppHeader } from '@/components/AppHeader'
+import { Tutor } from '@/features/ai/components/Tutor'
 import { typography } from '@/styles/typography'
 import '@/styles/globals.css'
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <ThemeProvider storageKey={THEME} attribute='data-theme' defaultTheme='system' enableSystem>
           <AppHeader />
           {children}
+          <Tutor />
         </ThemeProvider>
       </body>
     </html>
