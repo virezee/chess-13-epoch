@@ -31,7 +31,7 @@
     "oxlint-tsgolint": "^7.0.2003",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "wrangler": "^4.143.0"
+    "wrangler": "^4.143.1"
   },
   "packageManager": "bun@1.4.2"
 }

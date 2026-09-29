@@ -1,87 +1,11 @@
 'use client'
 
-import type { Message, Transcript } from '@/types/tutor'
+import type { Message } from '@/types/tutor'
 import { useState, useEffect, useRef } from 'react'
-import { TUTOR } from '@/constants/storage'
-import { USER, ASSISTANT } from '@/constants/chat'
-import { ask } from '../lib/question'
+import { USER } from '@/constants/chat'
+import { useTutor } from '../lib/memory'
 import { cn } from '@/lib/cn'
 
-const EMPTY: Transcript = { isOpen: false, messages: [] }
-const NOTICE: Record<number, string> = {
-  400: 'That question is too long or malformed.',
-  422: 'I only answer questions about chess.',
-  429: 'Too many questions. Wait a minute and try again.',
-  503: 'The tutor is unavailable right now. Try again later.'
-}
-
-const isMessage = (value: unknown): value is Message =>
-  typeof value === 'object' &&
-  value !== null &&
-  'role' in value &&
-  (value.role === USER || value.role === ASSISTANT) &&
-  'content' in value &&
-  typeof value.content === 'string'
-const isTranscript = (value: unknown): value is Transcript =>
-  typeof value === 'object' &&
-  value !== null &&
-  'isOpen' in value &&
-  typeof value.isOpen === 'boolean' &&
-  'messages' in value &&
-  Array.isArray(value.messages) &&
-  value.messages.every((message: unknown) => isMessage(message))
-const load = (): Transcript => {
-  try {
-    const stored = sessionStorage.getItem(TUTOR)
-    if (stored === null) return EMPTY
-    const transcript: unknown = JSON.parse(stored)
-    return isTranscript(transcript) ? transcript : EMPTY
-  } catch {
-    return EMPTY
-  }
-}
-const save = (transcript: Transcript): void => {
-  try {
-    sessionStorage.setItem(TUTOR, JSON.stringify(transcript))
-  } catch {}
-}
-const append = (messages: Message[], text: string): Message[] =>
-  messages.map((message, index) =>
-    index === messages.length - 1 ? { ...message, content: message.content + text } : message
-  )
-const useTutor = () => {
-  const [transcript, setTranscript] = useState<Transcript>(EMPTY)
-  const [isLoaded, setLoaded] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
-  const [isBusy, setBusy] = useState(false)
-  useEffect(() => {
-    setTranscript(load())
-    setLoaded(true)
-  }, [])
-  useEffect(() => {
-    if (isLoaded) save(transcript)
-  }, [isLoaded, transcript])
-  const toggle = (): void => {
-    setTranscript(current => ({ ...current, isOpen: !current.isOpen }))
-  }
-  const send = async (question: string): Promise<void> => {
-    const history: Message[] = [...transcript.messages, { role: USER, content: question }]
-    setTranscript(current => ({
-      ...current,
-      messages: [...history, { role: ASSISTANT, content: '' }]
-    }))
-    setNotice(null)
-    setBusy(true)
-    const status = await ask(history, text => {
-      setTranscript(current => ({ ...current, messages: append(current.messages, text) }))
-    }).catch(() => 0)
-    setBusy(false)
-    if (status === 200) return
-    setTranscript(current => ({ ...current, messages: transcript.messages }))
-    setNotice(NOTICE[status] ?? 'Could not reach the tutor.')
-  }
-  return { transcript, notice, isBusy, send, toggle }
-}
 function Messages({ messages, notice }: { messages: Message[]; notice: string | null }) {
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -140,7 +64,7 @@ function Composer({ isBusy, onSend }: { isBusy: boolean; onSend: (question: stri
     </form>
   )
 }
-function Panel({
+function Chatbox({
   messages,
   notice,
   isBusy,
@@ -154,7 +78,7 @@ function Panel({
   onClose: () => void
 }) {
   return (
-    <section className='flex h-[28rem] max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded border border-line bg-surface shadow-lg'>
+    <section className='flex h-112 max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded border border-line bg-surface shadow-lg'>
       <header className='flex items-center justify-between border-b border-line px-3.5 py-2.5'>
         <p className='text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
           Rules Tutor
@@ -177,7 +101,7 @@ export function Tutor() {
   return (
     <div className='fixed bottom-4 right-4 z-30 flex flex-col items-end gap-3'>
       {transcript.isOpen && (
-        <Panel
+        <Chatbox
           messages={transcript.messages}
           notice={notice}
           isBusy={isBusy}
