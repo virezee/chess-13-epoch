@@ -172,7 +172,11 @@ function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: Co
     </div>
   )
 }
-function Outcome({ result, ...controls }: ControlsProps & { result: Result }) {
+function Outcome({
+  result,
+  onHost,
+  ...controls
+}: ControlsProps & { result: Result; onHost: (() => void) | null }) {
   const isDraw = result.winner === null
   return (
     <>
@@ -195,7 +199,8 @@ function Outcome({ result, ...controls }: ControlsProps & { result: Result }) {
           <div className='mt-2 flex'>
             <Action
               onClick={() => {
-                controls.onOffer(NEW)
+                if (onHost === null) controls.onOffer(NEW)
+                else onHost()
               }}>
               New Game
             </Action>
@@ -248,7 +253,7 @@ export function GameStatus(
           </div>
         )
       ) : (
-        <Outcome result={result} {...rest} />
+        <Outcome result={result} onHost={onHost} {...rest} />
       )}
     </section>
   )

@@ -15,7 +15,12 @@ export const useGame = (code: string | undefined): Game => {
   const [promotions, setPromotions] = useState<Move[]>([])
   const [pending, setPending] = useState<typeof RESIGN | typeof DRAW | typeof NEW | null>(null)
   const [key, setKey] = useState(0)
-  const room = useRoom(path, setSave, setPromotions, setKey)
+  const room = useRoom(
+    save.match.abandoned === null ? path : undefined,
+    setSave,
+    setPromotions,
+    setKey
+  )
   const { position, moves, result } = useMemo(() => turn(save, null), [save])
   const sync = (next: Save): void => {
     setSave(next)
@@ -90,8 +95,9 @@ export const panelProps = (game: ReturnType<typeof useGame>): PanelProps => {
     offer: room.offer,
     result: game.result,
     onHost:
-      path === undefined
+      path === undefined || save.match.abandoned !== null
         ? () => {
+            sync(opening())
             setPath(CREATE)
           }
         : null,
