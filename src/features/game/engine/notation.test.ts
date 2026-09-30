@@ -2,7 +2,16 @@ import type { Side, SquareOccupant } from '@/types/material'
 import type { Move, State } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, MARSHAL, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { position } from './position'
 import { opening } from './opening'
 import { notation } from './notation'
@@ -141,5 +150,27 @@ describe('sentinel notation', () => {
       c4: { side: WHITE, piece: MARSHAL }
     }
     expect(write(WHITE, enhanced, { from: 'e1', to: 'e5' })).toBe('Se1-e5^')
+  })
+})
+describe('assassin notation', () => {
+  it('writes A for either side, and its landing tile for a capture rather than the victim', () => {
+    const capture: SquareOccupant = {
+      e10: { side: BLACK, piece: ASSASSIN },
+      e7: { side: WHITE, piece: HERALD }
+    }
+    expect(write(WHITE, { g7: { side: WHITE, piece: ASSASSIN } }, { from: 'g7', to: 'g10' })).toBe(
+      'Ag7-g10'
+    )
+    expect(write(BLACK, capture, { from: 'e10', to: 'e6', captures: ['e7'] })).toBe('Ae10xe6')
+  })
+  it('writes a corner capture onto the corner, and marks the command zone', () => {
+    const corner: SquareOccupant = {
+      g7: { side: WHITE, piece: ASSASSIN },
+      m13: { side: BLACK, piece: HERALD }
+    }
+    const enhanced: SquareOccupant = { ...corner, g5: { side: WHITE, piece: MARSHAL } }
+    const take: Move = { from: 'g7', to: 'm13', captures: ['m13'] }
+    expect(write(WHITE, corner, take)).toBe('Ag7xm13')
+    expect(write(WHITE, enhanced, take)).toBe('Ag7xm13^')
   })
 })

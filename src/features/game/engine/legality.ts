@@ -87,7 +87,7 @@ const sliderCheckers = (
           : makeSquare({ file: origin.file - fileStep, rank: origin.rank - rankStep })
         isAttacked =
           isAssassinReachable(occupancy, {}, pope, fileStep, rankStep, enhanced, distance) &&
-          threats(board, side, { vacated: [pope] }, false, dest).length === 0
+          threats(board, side, { vacated: [pope, square] }, false, dest).length === 0
         break
       }
       case MAGE:

@@ -113,17 +113,19 @@ describe('pinned pieces watching an assassin landing', () => {
   it('lets the assassin land on b4 while nothing watches it', () => {
     expect(capturesFrom(BLACK, victim, 'b8')).toContainEqual(['b5'])
   })
-  it('forbids the landing on b4 for a pinned legionary, templar, herald, mage or sentinel', () => {
+  it('forbids the landing on b4 whichever pinned piece watches it', () => {
     const legionary: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: LEGIONARY } }
     const templar: SquareOccupant = { ...rank, d1: { side: WHITE, piece: TEMPLAR } }
     const herald: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: HERALD } }
     const mage: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: MAGE } }
     const sentinel: SquareOccupant = { ...rank, b1: { side: WHITE, piece: SENTINEL } }
+    const assassin: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: ASSASSIN } }
     expect(capturesFrom(BLACK, legionary, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, templar, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, herald, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, mage, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, sentinel, 'b8')).not.toContainEqual(['b5'])
+    expect(capturesFrom(BLACK, assassin, 'b8')).not.toContainEqual(['b5'])
   })
 })
 describe('supporting a marshal capture', () => {
@@ -373,6 +375,142 @@ describe('sentinel supporting a marshal capture', () => {
   it('supports a marshal capture while pinned', () => {
     const pinned: SquareOccupant = {
       c3: { side: WHITE, piece: SENTINEL },
+      f6: { side: BLACK, piece: HERALD },
+      e9: { side: WHITE, piece: MARSHAL },
+      c7: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['c7'])
+  })
+})
+describe('assassin attacks', () => {
+  const assassin: SquareOccupant = {
+    c2: { side: WHITE, piece: ASSASSIN },
+    c6: { side: BLACK, piece: HERALD }
+  }
+  it('attacks a piece on its line when the tile behind it is empty and unwatched', () => {
+    expect(attackers(WHITE, assassin, 'c6')).toEqual(['c2'])
+  })
+  it('does not attack it when the tile behind is occupied by any piece, or watched', () => {
+    const own: SquareOccupant = { ...assassin, c7: { side: WHITE, piece: LEGIONARY } }
+    const enemy: SquareOccupant = { ...assassin, c7: { side: BLACK, piece: LEGIONARY } }
+    const watched: SquareOccupant = { ...assassin, d8: { side: BLACK, piece: LEGIONARY } }
+    expect(attackers(WHITE, own, 'c6')).toEqual([])
+    expect(attackers(WHITE, enemy, 'c6')).toEqual([])
+    expect(attackers(WHITE, watched, 'c6')).toEqual([])
+  })
+  it('counts the tile behind inside its range of 6 while restricted, and not when enhanced', () => {
+    const far: SquareOccupant = {
+      c2: { side: WHITE, piece: ASSASSIN },
+      c8: { side: BLACK, piece: HERALD }
+    }
+    const enhanced: SquareOccupant = { ...far, a5: { side: WHITE, piece: MARSHAL } }
+    expect(attackers(WHITE, far, 'c8')).toEqual([])
+    expect(attackers(WHITE, enhanced, 'c8')).toEqual(['c2'])
+  })
+})
+describe('assassin attacks at the edge and under a pin', () => {
+  it('attacks a corner by aiming at the corner itself, unless the corner is watched', () => {
+    const corner: SquareOccupant = {
+      g7: { side: WHITE, piece: ASSASSIN },
+      a13: { side: BLACK, piece: HERALD }
+    }
+    const watched: SquareOccupant = { ...corner, a10: { side: BLACK, piece: SENTINEL } }
+    expect(attackers(WHITE, corner, 'a13')).toEqual(['g7'])
+    expect(attackers(WHITE, watched, 'a13')).toEqual([])
+  })
+  it('cannot attack a piece on file a along the rank from inside the board', () => {
+    const rank: SquareOccupant = {
+      g7: { side: WHITE, piece: ASSASSIN },
+      a7: { side: BLACK, piece: HERALD }
+    }
+    const file: SquareOccupant = {
+      a3: { side: WHITE, piece: ASSASSIN },
+      a7: { side: BLACK, piece: HERALD }
+    }
+    expect(attackers(WHITE, rank, 'a7')).toEqual([])
+    expect(attackers(WHITE, file, 'a7')).toEqual(['a3'])
+  })
+  it('keeps attacking while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: ASSASSIN },
+      f6: { side: BLACK, piece: HERALD },
+      c7: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(attackers(WHITE, pinned, 'c7')).toEqual(['c3'])
+  })
+})
+describe('assassin watching another assassin landing', () => {
+  it('counts an enemy assassin as a watcher only if its own landing would be safe, however deep', () => {
+    const base: SquareOccupant = {
+      c10: { side: BLACK, piece: ASSASSIN },
+      c7: { side: WHITE, piece: HERALD },
+      h6: { side: WHITE, piece: ASSASSIN }
+    }
+    const guarded: SquareOccupant = { ...base, a7: { side: BLACK, piece: LEGIONARY } }
+    const countered: SquareOccupant = { ...base, b10: { side: BLACK, piece: ASSASSIN } }
+    const recountered: SquareOccupant = { ...countered, a4: { side: WHITE, piece: LEGIONARY } }
+    expect(capturesFrom(BLACK, base, 'c10')).not.toContainEqual(['c7'])
+    expect(capturesFrom(BLACK, guarded, 'c10')).toContainEqual(['c7'])
+    expect(capturesFrom(BLACK, countered, 'c10')).toContainEqual(['c7'])
+    expect(capturesFrom(BLACK, recountered, 'c10')).not.toContainEqual(['c7'])
+  })
+  it('lets a line open behind an enemy assassin that would leave its square to take it', () => {
+    const occupancy: SquareOccupant = {
+      h10: { side: BLACK, piece: ASSASSIN },
+      h7: { side: WHITE, piece: HERALD },
+      h2: { side: WHITE, piece: ASSASSIN },
+      h1: { side: BLACK, piece: SENTINEL }
+    }
+    expect(capturesFrom(BLACK, occupancy, 'h10')).toContainEqual(['h7'])
+  })
+})
+describe('four assassins taking in turn', () => {
+  it('works the chain back from the last capture, and a guard on h5 turns it around', () => {
+    const chain: SquareOccupant = {
+      i7: { side: BLACK, piece: ASSASSIN },
+      d8: { side: BLACK, piece: ASSASSIN },
+      f9: { side: WHITE, piece: ASSASSIN },
+      d5: { side: WHITE, piece: ASSASSIN },
+      g7: { side: WHITE, piece: LEGIONARY }
+    }
+    const guarded: SquareOccupant = { ...chain, i6: { side: BLACK, piece: LEGIONARY } }
+    expect(capturesFrom(BLACK, chain, 'i7')).not.toContainEqual(['g7'])
+    expect(capturesFrom(BLACK, guarded, 'i7')).toContainEqual(['g7'])
+  })
+  it('never counts a guard from an assassin already taken in the chain', () => {
+    const occupancy: SquareOccupant = {
+      i7: { side: BLACK, piece: ASSASSIN },
+      d8: { side: BLACK, piece: ASSASSIN },
+      f9: { side: WHITE, piece: ASSASSIN },
+      h4: { side: WHITE, piece: ASSASSIN },
+      g7: { side: WHITE, piece: LEGIONARY }
+    }
+    expect(capturesFrom(BLACK, occupancy, 'i7')).not.toContainEqual(['g7'])
+  })
+})
+describe('assassin supporting a marshal capture', () => {
+  it('supports when the tile behind the target is empty, even if the enemy watches it', () => {
+    const occupancy: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      h8: { side: WHITE, piece: ASSASSIN },
+      d9: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(capturesFrom(WHITE, occupancy, 'h8')).not.toContainEqual(['d8'])
+    expect(capturesFrom(WHITE, occupancy, 'd4')).toContainEqual(['d8'])
+  })
+  it('gives no support when the tile behind the target is occupied', () => {
+    const occupancy: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      h8: { side: WHITE, piece: ASSASSIN },
+      c8: { side: WHITE, piece: LEGIONARY }
+    }
+    expect(capturesFrom(WHITE, occupancy, 'd4')).not.toContainEqual(['d8'])
+  })
+  it('supports a marshal capture while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: ASSASSIN },
       f6: { side: BLACK, piece: HERALD },
       e9: { side: WHITE, piece: MARSHAL },
       c7: { side: BLACK, piece: LEGIONARY }

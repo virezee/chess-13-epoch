@@ -56,9 +56,9 @@ const isEvasion = (
     if (move.to === dest) return true
     const view = {
       moved: { piece: promoted, square: move.to },
-      vacated: [move.from, ...(move.captures ?? [])]
+      vacated: [move.from, ...(move.captures ?? []), pope, checker]
     }
-    return threats(board, side, view, false, dest).some(defender => defender !== pope)
+    return threats(board, side, view, false, dest).length > 0
   })
 }
 export const candidate = (position: Position): Move[] => {

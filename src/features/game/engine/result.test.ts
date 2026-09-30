@@ -1,9 +1,9 @@
-// oxlint-disable import/max-dependencies
+// oxlint-disable import/max-dependencies, max-lines
 import type { SquareOccupant } from '@/types/material'
 import type { Move, State, Result } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { POPE, ASSASSIN, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { CHECKMATE, STALEMATE, REPETITION, INSUFFICIENT_MATERIAL } from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
@@ -267,6 +267,59 @@ describe('sentinel insufficient material and stalemate', () => {
       e5: { side: BLACK, piece: HERALD },
       b3: { side: BLACK, piece: LEGIONARY },
       c2: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})
+describe('assassin delivering mate or repeating a position', () => {
+  it('mates a pope in the corner by aiming at the corner itself', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      a7: { side: WHITE, piece: ASSASSIN },
+      c11: { side: WHITE, piece: LEGIONARY },
+      c12: { side: WHITE, piece: LEGIONARY },
+      a13: { side: BLACK, piece: POPE }
+    }
+    const next = position(BLACK, occupancy, still())
+    const moves = legality(next)
+    expect(moves).toEqual([])
+    expect(result(next, moves, opening().match)).toEqual({ winner: WHITE, reason: CHECKMATE })
+  })
+  it('loses for the side whose move brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      d3: { side: WHITE, piece: ASSASSIN },
+      j10: { side: BLACK, piece: ASSASSIN },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'd3', to: 'd4' },
+      { from: 'j10', to: 'j9' },
+      { from: 'd4', to: 'd3' },
+      { from: 'j9', to: 'j10' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+})
+describe('assassin insufficient material and stalemate', () => {
+  it('keeps the game going while an assassin is on the board', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      e5: { side: WHITE, piece: ASSASSIN },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toBeNull()
+  })
+  it('wins for the side whose pinned assassin and pope have no move', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b2: { side: WHITE, piece: ASSASSIN },
+      c3: { side: BLACK, piece: HERALD },
+      b3: { side: BLACK, piece: LEGIONARY },
+      c2: { side: BLACK, piece: LEGIONARY },
+      e5: { side: BLACK, piece: LEGIONARY },
       m13: { side: BLACK, piece: POPE }
     }
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })

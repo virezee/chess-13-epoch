@@ -2,7 +2,16 @@ import type { SquareOccupant } from '@/types/material'
 import type { Move } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, MARSHAL, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { isEnhanced, generate } from './generate'
 
 const destinations = (moves: Move[]): string[] => moves.map(({ to }) => to)
@@ -44,6 +53,15 @@ const sentinelFrom = (
   const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: SENTINEL } }
   const castling = { left: false, right: false }
   return destinations(generate(WHITE, SENTINEL, board, marshal, square, castling, [], null))
+}
+const assassinFrom = (
+  square: string,
+  marshal: string | null,
+  occupancy: SquareOccupant = {}
+): string[] => {
+  const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: ASSASSIN } }
+  const castling = { left: false, right: false }
+  return destinations(generate(WHITE, ASSASSIN, board, marshal, square, castling, [], null))
 }
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
@@ -148,5 +166,21 @@ describe('command zone on the sentinel', () => {
   it('judges the zone from the square the move starts on', () => {
     expect(sentinelFrom('e5', 'a1')).toContain('e11')
     expect(sentinelFrom('f6', 'a1')).not.toContain('f10')
+  })
+})
+describe('command zone on the assassin', () => {
+  const victim: SquareOccupant = { a7: { side: BLACK, piece: MAGE } }
+  it('slides along the whole line only inside the zone', () => {
+    expect(assassinFrom('a1', 'c3')).toContain('a13')
+    expect(assassinFrom('a1', 'f6')).not.toContain('a8')
+    expect(assassinFrom('a1', null)).not.toContain('a8')
+  })
+  it('counts its landing inside the range of 6 only outside the zone', () => {
+    expect(assassinFrom('a1', 'c3', victim)).toContain('a8')
+    expect(assassinFrom('a1', 'f6', victim)).not.toContain('a8')
+  })
+  it('judges the zone from the square the move starts on', () => {
+    expect(assassinFrom('e5', 'a1')).toContain('e13')
+    expect(assassinFrom('f6', 'a1')).not.toContain('f13')
   })
 })

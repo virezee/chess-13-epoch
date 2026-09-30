@@ -30,26 +30,26 @@ const marshalAt = (side: Side, view: View, marshalSquare: string | null): string
   if (marshalSquare === null || (view.vacated?.includes(marshalSquare) ?? false)) return null
   return marshalSquare
 }
-const hopped = (view: View, square: string): View =>
-  view.moved?.square === square
-    ? { vacated: [...(view.vacated ?? []), square] }
-    : { ...view, vacated: [...(view.vacated ?? []), square] }
+const hopped = (view: View, attacker: string, square: string): View => {
+  const vacated = [...(view.vacated ?? []), attacker, square]
+  return view.moved?.square === attacker || view.moved?.square === square
+    ? { vacated }
+    : { ...view, vacated }
+}
 const isLandingClear = (
   board: Board,
   side: Side,
   view: View,
+  attacker: string,
   square: string,
   dest: string,
   chain: readonly string[]
 ): boolean => {
   const key = `${side}${square}`
   if (chain.includes(key)) return true
-  return (
-    threats(board, side === WHITE ? BLACK : WHITE, hopped(view, square), false, dest, false, [
-      ...chain,
-      key
-    ]).length === 0
-  )
+  const enemy = side === WHITE ? BLACK : WHITE
+  const after = hopped(view, attacker, square)
+  return threats(board, enemy, after, false, dest, false, [...chain, key]).length === 0
 }
 const leapers = (
   board: Board,
@@ -157,7 +157,7 @@ export const threats = (
           : makeSquare({ file: target.file - fileStep, rank: target.rank - rankStep })
         if (
           isAssassinReachable(occupancy, view, square, fileStep, rankStep, enhanced, distance) &&
-          (isLandingAttacked || isLandingClear(board, side, view, square, dest, chain))
+          (isLandingAttacked || isLandingClear(board, side, view, attacker, square, dest, chain))
         )
           attackers.push(attacker)
       } else if (occupant.piece === MAGE) {

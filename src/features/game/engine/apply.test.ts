@@ -7,6 +7,7 @@ import {
   POPE,
   EMPEROR,
   MARSHAL,
+  ASSASSIN,
   SENTINEL,
   MAGE,
   HERALD,
@@ -567,5 +568,98 @@ describe('sentinel moved by castling', () => {
     const right = follow(start, { from: 'g13', to: 'j13', sentinel: { from: 'm13', to: 'i13' } })
     expect(left.occupancy['e13']).toEqual({ side: BLACK, piece: SENTINEL })
     expect(right.occupancy['i13']).toEqual({ side: BLACK, piece: SENTINEL })
+  })
+})
+describe('assassin capture', () => {
+  it('removes the victim and lands behind it, leaving its own square', () => {
+    const occupancy: SquareOccupant = {
+      e10: { side: BLACK, piece: ASSASSIN },
+      e7: { side: WHITE, piece: HERALD }
+    }
+    const take: Move = { from: 'e10', to: 'e6', captures: ['e7'] }
+    const { occupancy: next } = play(BLACK, occupancy, take)
+    expect(next['e6']).toEqual({ side: BLACK, piece: ASSASSIN })
+    expect(next['e7']).toBeUndefined()
+    expect(next['e10']).toBeUndefined()
+  })
+  it('stands on the corner itself when it takes a piece there', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: BLACK, piece: ASSASSIN },
+      m1: { side: WHITE, piece: HERALD }
+    }
+    const { occupancy: next } = play(BLACK, occupancy, { from: 'g7', to: 'm1', captures: ['m1'] })
+    expect(next['m1']).toEqual({ side: BLACK, piece: ASSASSIN })
+    expect(next['g7']).toBeUndefined()
+  })
+})
+describe('assassin riposte', () => {
+  it('arms the riposte from the square its victim stood on, not from its landing', () => {
+    const onVictim: SquareOccupant = {
+      e5: { side: WHITE, piece: MARSHAL },
+      f6: { side: WHITE, piece: HERALD },
+      h4: { side: BLACK, piece: ASSASSIN }
+    }
+    const onLanding: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      c9: { side: WHITE, piece: HERALD },
+      b10: { side: BLACK, piece: ASSASSIN }
+    }
+    const intoLine: Move = { from: 'h4', to: 'e7', captures: ['f6'] }
+    const fromOff: Move = { from: 'b10', to: 'd8', captures: ['c9'] }
+    expect(play(BLACK, onVictim, intoLine).state.riposte).toBe(true)
+    expect(play(BLACK, onLanding, fromOff).state.riposte).toBe(false)
+  })
+  it('does not arm it when the line is blocked, even by its own landing', () => {
+    const blocked: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d6: { side: WHITE, piece: LEGIONARY },
+      d8: { side: WHITE, piece: TEMPLAR },
+      h8: { side: BLACK, piece: ASSASSIN }
+    }
+    const landing: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: WHITE, piece: TEMPLAR },
+      d12: { side: BLACK, piece: ASSASSIN }
+    }
+    const across: Move = { from: 'h8', to: 'c8', captures: ['d8'] }
+    const down: Move = { from: 'd12', to: 'd7', captures: ['d8'] }
+    expect(play(BLACK, blocked, across).state.riposte).toBe(false)
+    expect(play(BLACK, landing, down).state.riposte).toBe(false)
+  })
+})
+describe('assassin progress and slots', () => {
+  const fallen: SquareOccupant = {
+    e5: { side: WHITE, piece: ASSASSIN },
+    g8: { side: BLACK, piece: TEMPLAR }
+  }
+  const take: Move = { from: 'g8', to: 'e5', captures: ['e5'] }
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: ASSASSIN } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: ASSASSIN },
+      g9: { side: BLACK, piece: TEMPLAR }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10', captures: ['g9'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+  it('opens an assassin slot on the file it dies on', () => {
+    const { state } = play(BLACK, fallen, take)
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [ASSASSIN] }])
+  })
+  it('adds a second fallen assassin to the same slot', () => {
+    const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [ASSASSIN] }))
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [ASSASSIN, ASSASSIN] }])
+  })
+  it('opens the slot of its victim on the file the victim died on, not where it lands', () => {
+    const occupancy: SquareOccupant = {
+      f7: { side: BLACK, piece: ASSASSIN },
+      d5: { side: WHITE, piece: TEMPLAR }
+    }
+    const { state } = play(BLACK, occupancy, { from: 'f7', to: 'c4', captures: ['d5'] })
+    expect(state.promotions[WHITE]).toEqual([{ file: 3, piece: [TEMPLAR] }])
   })
 })

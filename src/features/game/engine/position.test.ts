@@ -1,3 +1,4 @@
+// oxlint-disable max-lines
 import type { Side, Piece, SquareOccupant } from '@/types/material'
 import type { Move, State, Save } from '@/types/game'
 import { describe, it, expect } from 'vitest'
@@ -6,6 +7,7 @@ import {
   POPE,
   EMPEROR,
   MARSHAL,
+  ASSASSIN,
   SENTINEL,
   MAGE,
   HERALD,
@@ -238,6 +240,54 @@ describe('emperor woken by a sentinel', () => {
   it('wakes once a sentinel captures its marshal', () => {
     const occupancy: SquareOccupant = { ...sleeper, h5: { side: BLACK, piece: SENTINEL } }
     const take: Move = { from: 'h5', to: 'h1', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+})
+describe('emperor woken by an assassin', () => {
+  it('wakes when an assassin attacks it along its rank', () => {
+    const occupancy: SquareOccupant = { ...sleeper, a1: { side: BLACK, piece: ASSASSIN } }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('stays asleep during the opponent turn under an assassin', () => {
+    const occupancy: SquareOccupant = { ...sleeper, a1: { side: BLACK, piece: ASSASSIN } }
+    expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('stays asleep when the tile behind it is occupied', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      a1: { side: BLACK, piece: ASSASSIN },
+      f1: { side: WHITE, piece: LEGIONARY }
+    }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('stays asleep under an assassin aiming from above, whose landing would be off the board', () => {
+    const occupancy: SquareOccupant = { ...sleeper, e6: { side: BLACK, piece: ASSASSIN } }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+})
+describe('emperor beside an assassin', () => {
+  it('wakes when an assassin lands beside it, and may take the assassin', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      e3: { side: WHITE, piece: EMPEROR, awake: false },
+      h1: { side: WHITE, piece: MARSHAL },
+      e5: { side: WHITE, piece: LEGIONARY },
+      e8: { side: BLACK, piece: ASSASSIN },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const start: Save = { side: BLACK, occupancy, state: opening().state, match: opening().match }
+    const landed = turn(start, { from: 'e8', to: 'e4', captures: ['e5'] })
+    expect(landed.position.occupancy['e3']).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+    expect(landed.moves).toContainEqual({ from: 'e3', to: 'e4', captures: ['e4'] })
+  })
+  it('wakes once an assassin captures its marshal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, f1: { side: BLACK, piece: ASSASSIN } }
+    const take: Move = { from: 'f1', to: 'i1', captures: ['h1'] }
     const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
     expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
       side: WHITE,
