@@ -1,8 +1,18 @@
+// oxlint-disable max-lines
 import type { Side, SquareOccupant } from '@/types/material'
 import type { Position } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, MARSHAL, ASSASSIN, SENTINEL, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { threats } from './threats'
 import { legality } from './legality'
 import { position } from './position'
@@ -103,13 +113,15 @@ describe('pinned pieces watching an assassin landing', () => {
   it('lets the assassin land on b4 while nothing watches it', () => {
     expect(capturesFrom(BLACK, victim, 'b8')).toContainEqual(['b5'])
   })
-  it('forbids the landing when a pinned legionary, templar or herald watches b4', () => {
+  it('forbids the landing when a pinned legionary, templar, herald or mage watches b4', () => {
     const legionary: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: LEGIONARY } }
     const templar: SquareOccupant = { ...rank, d1: { side: WHITE, piece: TEMPLAR } }
     const herald: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: HERALD } }
+    const mage: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: MAGE } }
     expect(capturesFrom(BLACK, legionary, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, templar, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, herald, 'b8')).not.toContainEqual(['b5'])
+    expect(capturesFrom(BLACK, mage, 'b8')).not.toContainEqual(['b5'])
   })
 })
 describe('supporting a marshal capture', () => {
@@ -212,5 +224,83 @@ describe('herald watching and supporting', () => {
       a5: { side: BLACK, piece: LEGIONARY }
     }
     expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['a5'])
+  })
+})
+describe('mage attacks', () => {
+  const mage: SquareOccupant = { g7: { side: WHITE, piece: MAGE } }
+  it('attacks the 8 tiles around it', () => {
+    for (const square of ['f6', 'f7', 'f8', 'g6', 'g8', 'h6', 'h7', 'h8'])
+      expect(attackers(WHITE, mage, square)).toEqual(['g7'])
+  })
+  it('never attacks 2 tiles away, even when enhanced', () => {
+    const enhanced: SquareOccupant = { ...mage, c7: { side: WHITE, piece: MARSHAL } }
+    for (const square of ['e5', 'e7', 'e9', 'g5', 'g9', 'i5', 'i7', 'i9'])
+      expect(attackers(WHITE, enhanced, square)).toEqual([])
+  })
+  it('keeps attacking the rest of its ring beside its own pope', () => {
+    const beside: SquareOccupant = { b2: { side: WHITE, piece: MAGE } }
+    expect(attackers(WHITE, beside, 'c3')).toEqual(['b2'])
+  })
+  it('keeps attacking while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: MAGE },
+      f6: { side: BLACK, piece: HERALD }
+    }
+    expect(attackers(WHITE, pinned, 'b4')).toEqual(['c3'])
+  })
+})
+describe('mage watching an assassin landing', () => {
+  it('watches the landing with its ring', () => {
+    const watched: SquareOccupant = {
+      e10: { side: BLACK, piece: ASSASSIN },
+      e7: { side: WHITE, piece: HERALD },
+      d5: { side: WHITE, piece: MAGE }
+    }
+    expect(capturesFrom(BLACK, watched, 'e10')).not.toContainEqual(['e7'])
+  })
+  it('watches the landing even when its own pope beside it forbids the blast', () => {
+    const victim: SquareOccupant = {
+      f6: { side: BLACK, piece: ASSASSIN },
+      d4: { side: WHITE, piece: HERALD }
+    }
+    const watched: SquareOccupant = { ...victim, b2: { side: WHITE, piece: MAGE } }
+    expect(capturesFrom(BLACK, victim, 'f6')).toContainEqual(['d4'])
+    expect(capturesFrom(BLACK, watched, 'f6')).not.toContainEqual(['d4'])
+  })
+  it('leaves the landing free once the assassin takes the mage itself', () => {
+    const mage: SquareOccupant = {
+      e10: { side: BLACK, piece: ASSASSIN },
+      e7: { side: WHITE, piece: MAGE }
+    }
+    expect(capturesFrom(BLACK, mage, 'e10')).toContainEqual(['e7'])
+  })
+})
+describe('mage supporting a marshal capture', () => {
+  const target: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: BLACK, piece: HERALD }
+  }
+  it('supports a marshal capture with its ring', () => {
+    const supported: SquareOccupant = { ...target, c9: { side: WHITE, piece: MAGE } }
+    expect(capturesFrom(WHITE, supported, 'd4')).toContainEqual(['d8'])
+  })
+  it('gives no support 2 tiles away, even when enhanced', () => {
+    const enhanced: SquareOccupant = { ...target, b8: { side: WHITE, piece: MAGE } }
+    expect(capturesFrom(WHITE, enhanced, 'd4')).not.toContainEqual(['d8'])
+  })
+  it('supports a marshal capture while pinned or beside its own pope', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: MAGE },
+      f6: { side: BLACK, piece: HERALD },
+      b9: { side: WHITE, piece: MARSHAL },
+      b4: { side: BLACK, piece: LEGIONARY }
+    }
+    const beside: SquareOccupant = {
+      b2: { side: WHITE, piece: MAGE },
+      c3: { side: BLACK, piece: HERALD },
+      c8: { side: WHITE, piece: MARSHAL }
+    }
+    expect(capturesFrom(WHITE, pinned, 'b9')).toContainEqual(['b4'])
+    expect(capturesFrom(WHITE, beside, 'c8')).toContainEqual(['c3'])
   })
 })

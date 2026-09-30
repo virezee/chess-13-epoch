@@ -96,3 +96,30 @@ describe('herald notation', () => {
     expect(write(WHITE, enhanced, { from: 'g7', to: 'g8', captures: ['g8'] })).toBe('Hg7xg8^')
   })
 })
+describe('mage notation', () => {
+  it('writes G for either side and a dash for a step', () => {
+    expect(write(WHITE, { g7: { side: WHITE, piece: MAGE } }, { from: 'g7', to: 'h8' })).toBe(
+      'Gg7-h8'
+    )
+    expect(write(BLACK, { g7: { side: BLACK, piece: MAGE } }, { from: 'g7', to: 'f6' })).toBe(
+      'Gg7-f6'
+    )
+  })
+  it('writes a blast as a capture on its own square', () => {
+    const blast: SquareOccupant = {
+      g7: { side: WHITE, piece: MAGE },
+      h8: { side: BLACK, piece: HERALD },
+      f6: { side: BLACK, piece: TEMPLAR }
+    }
+    expect(write(WHITE, blast, { from: 'g7', to: 'g7', captures: ['h8', 'f6'] })).toBe('Gg7xg7')
+  })
+  it('marks a leap or a blast made inside the command zone', () => {
+    const enhanced: SquareOccupant = {
+      g7: { side: WHITE, piece: MAGE },
+      g5: { side: WHITE, piece: MARSHAL },
+      h8: { side: BLACK, piece: HERALD }
+    }
+    expect(write(WHITE, enhanced, { from: 'g7', to: 'g9' })).toBe('Gg7-g9^')
+    expect(write(WHITE, enhanced, { from: 'g7', to: 'g7', captures: ['h8'] })).toBe('Gg7xg7^')
+  })
+})

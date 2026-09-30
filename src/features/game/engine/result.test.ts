@@ -3,7 +3,7 @@ import type { SquareOccupant } from '@/types/material'
 import type { Move, State, Result } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, SENTINEL, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { POPE, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { CHECKMATE, STALEMATE, REPETITION, INSUFFICIENT_MATERIAL } from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
@@ -162,6 +162,59 @@ describe('herald insufficient material and stalemate', () => {
       c1: { side: BLACK, piece: SENTINEL },
       a3: { side: BLACK, piece: LEGIONARY },
       b3: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})
+describe('mage delivering mate or repeating a position', () => {
+  it('mates a pope boxed in the corner from the tile beside it', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      b12: { side: WHITE, piece: MAGE },
+      a11: { side: WHITE, piece: LEGIONARY },
+      a13: { side: BLACK, piece: POPE }
+    }
+    const next = position(BLACK, occupancy, still())
+    const moves = legality(next)
+    expect(moves).toEqual([])
+    expect(result(next, moves, opening().match)).toEqual({ winner: WHITE, reason: CHECKMATE })
+  })
+  it('loses for the side whose move brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      d3: { side: WHITE, piece: MAGE },
+      j10: { side: BLACK, piece: MAGE },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'd3', to: 'd4' },
+      { from: 'j10', to: 'j9' },
+      { from: 'd4', to: 'd3' },
+      { from: 'j9', to: 'j10' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+})
+describe('mage insufficient material and stalemate', () => {
+  it('keeps the game going while a mage is on the board', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      e5: { side: WHITE, piece: MAGE },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toBeNull()
+  })
+  it('wins for the side whose boxed mage may not blast beside its own pope', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      a2: { side: WHITE, piece: MAGE },
+      a3: { side: BLACK, piece: LEGIONARY },
+      b1: { side: BLACK, piece: TEMPLAR },
+      b2: { side: BLACK, piece: TEMPLAR },
+      b3: { side: BLACK, piece: LEGIONARY },
+      c2: { side: BLACK, piece: LEGIONARY },
       m13: { side: BLACK, piece: POPE }
     }
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })

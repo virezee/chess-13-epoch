@@ -3,14 +3,23 @@ import { HOST, GUEST } from '@/constants/room'
 import { DurableObject } from 'cloudflare:workers'
 import { tutor } from './tutor'
 
-const CORS = {
-  'access-control-allow-origin': 'https://chess-13-epoch.vercel.app',
-  'access-control-allow-methods': 'POST',
-  'access-control-allow-headers': 'content-type'
+const PRODUCTION = 'https://chess-13-epoch.vercel.app'
+const ORIGINS = new Set([
+  PRODUCTION,
+  'https://chess-13-epoch-git-feature-online-play-virezee.vercel.app'
+])
+const cors = (req: Request): Record<string, string> => {
+  const origin = req.headers.get('origin') ?? ''
+  return {
+    'access-control-allow-origin': ORIGINS.has(origin) ? origin : PRODUCTION,
+    'access-control-allow-methods': 'POST',
+    'access-control-allow-headers': 'content-type',
+    vary: 'origin'
+  }
 }
-const withCors = async (res: Promise<Response>): Promise<Response> => {
+const withCors = async (req: Request, res: Promise<Response>): Promise<Response> => {
   const response = await res
-  for (const [name, value] of Object.entries(CORS)) response.headers.set(name, value)
+  for (const [name, value] of Object.entries(cors(req))) response.headers.set(name, value)
   return response
 }
 const claim = async (req: Request, env: Env, left: number): Promise<Response> => {
@@ -89,8 +98,8 @@ export default {
   fetch(req: Request, env: Env): Promise<Response> | Response {
     const url = new URL(req.url)
     if (url.pathname === '/tutor') {
-      if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
-      return withCors(tutor(req, env))
+      if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req) })
+      return withCors(req, tutor(req, env))
     }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response(null, { status: 426 })
     if (url.pathname === '/create') return claim(req, env, 10)

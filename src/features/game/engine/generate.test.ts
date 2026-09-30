@@ -2,7 +2,7 @@ import type { SquareOccupant } from '@/types/material'
 import type { Move } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { POPE, MARSHAL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { isEnhanced, generate } from './generate'
 
 const destinations = (moves: Move[]): string[] => moves.map(({ to }) => to)
@@ -25,6 +25,17 @@ const heraldFrom = (
   const castling = { left: false, right: false }
   return destinations(generate(WHITE, HERALD, board, marshal, square, castling, [], null))
 }
+const mageFrom = (
+  square: string,
+  marshal: string | null,
+  occupancy: SquareOccupant = {}
+): Move[] => {
+  const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: MAGE } }
+  const castling = { left: false, right: false }
+  return generate(WHITE, MAGE, board, marshal, square, castling, [], null)
+}
+const blasts = (moves: Move[]): Set<string>[] =>
+  moves.filter(({ from, to }) => from === to).map(({ captures }) => new Set(captures))
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
     for (const square of ['h8', 'd8', 'h4', 'a1', 'd1', 'g7'])
@@ -75,5 +86,37 @@ describe('command zone on the herald', () => {
   it('judges the zone from the square the move starts on', () => {
     expect(heraldFrom('e5', 'a1')).toContain('l12')
     expect(heraldFrom('f6', 'a1')).not.toContain('m13')
+  })
+})
+describe('command zone on the mage', () => {
+  const own: SquareOccupant = {
+    f6: { side: WHITE, piece: LEGIONARY },
+    g8: { side: BLACK, piece: MAGE }
+  }
+  const pope: SquareOccupant = {
+    f6: { side: WHITE, piece: POPE },
+    g8: { side: BLACK, piece: MAGE }
+  }
+  it('leaps 2 tiles only inside the zone', () => {
+    expect(mageFrom('g7', 'g11')).toHaveLength(16)
+    expect(mageFrom('g7', 'g12')).toHaveLength(8)
+    expect(mageFrom('g7', null)).toHaveLength(8)
+  })
+  it('spares its own pieces and its own pope only inside the zone', () => {
+    expect(blasts(mageFrom('g7', 'g11', own))).toEqual([new Set(['g8'])])
+    expect(blasts(mageFrom('g7', 'g12', own))).toEqual([new Set(['f6', 'g8'])])
+    expect(blasts(mageFrom('g7', 'g11', pope))).toEqual([new Set(['g8'])])
+    expect(blasts(mageFrom('g7', null, pope))).toEqual([])
+  })
+  it('never destroys its own marshal, since a marshal in its ring puts it inside the zone', () => {
+    const occupancy: SquareOccupant = {
+      h8: { side: WHITE, piece: MARSHAL },
+      g8: { side: BLACK, piece: MAGE }
+    }
+    expect(blasts(mageFrom('g7', 'h8', occupancy))).toEqual([new Set(['g8'])])
+  })
+  it('judges the zone from the square the move starts on', () => {
+    expect(destinations(mageFrom('e5', 'a1'))).toContain('g7')
+    expect(destinations(mageFrom('f6', 'a1'))).not.toContain('h8')
   })
 })

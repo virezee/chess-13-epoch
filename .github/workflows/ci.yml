@@ -1,6 +1,10 @@
-name:
-run-name:
+name: CI
+run-name: CI on ${{ github.ref_name }} by  @${{ github.actor }}
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 permission:
 env:
 defaults:

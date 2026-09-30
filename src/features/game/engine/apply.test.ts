@@ -1,8 +1,18 @@
+// oxlint-disable max-lines
 import type { Side, SquareOccupant } from '@/types/material'
 import type { Move, State, Save } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, EMPEROR, MARSHAL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  EMPEROR,
+  MARSHAL,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { GUEST } from '@/constants/room'
 import { position } from './position'
 import { apply, canSwap, takeSwap } from './apply'
@@ -51,7 +61,10 @@ describe('legionary en passant right', () => {
     const burst = play(WHITE, { e3: { side: WHITE, piece: LEGIONARY } }, { from: 'e3', to: 'e7' })
     const next = position(burst.side, burst.occupancy, burst.state)
     expect(canSwap(next, burst.match)).toBe(true)
-    expect(takeSwap(next, burst.match, GUEST).state.enPassant).toEqual({ target: 'e6', captured: 'e7' })
+    expect(takeSwap(next, burst.match, GUEST).state.enPassant).toEqual({
+      target: 'e6',
+      captured: 'e7'
+    })
   })
 })
 describe('legionary en passant capture', () => {
@@ -162,7 +175,7 @@ describe('templar progress and slots', () => {
   it('adds to the no-progress counter with a quiet leap', () => {
     const occupancy: SquareOccupant = { g7: { side: WHITE, piece: TEMPLAR } }
     const { state } = play(WHITE, occupancy, { from: 'g7', to: 'i10' })
-    expect(state.noProgress.count).toBeGreaterThan(5)
+    expect(state.noProgress.count).toBe(6)
   })
   it('resets the no-progress counter with a capture', () => {
     const occupancy: SquareOccupant = {
@@ -291,5 +304,171 @@ describe('herald progress and slots', () => {
   it('adds a second fallen herald to the same slot', () => {
     const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [HERALD] }))
     expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [HERALD, HERALD] }])
+  })
+})
+describe('mage blast', () => {
+  it('destroys the pieces it blasts and leaves the mage on its square', () => {
+    const occupancy: SquareOccupant = {
+      e5: { side: WHITE, piece: MAGE },
+      d6: { side: BLACK, piece: HERALD },
+      f4: { side: BLACK, piece: TEMPLAR }
+    }
+    const blast: Move = { from: 'e5', to: 'e5', captures: ['d6', 'f4'] }
+    const { occupancy: next } = play(WHITE, occupancy, blast)
+    expect(next['e5']).toEqual({ side: WHITE, piece: MAGE })
+    expect(next['d6']).toBeUndefined()
+    expect(next['f4']).toBeUndefined()
+  })
+  it('never sets off a mage that dies, whether blasted or captured', () => {
+    const blasted: SquareOccupant = {
+      e5: { side: WHITE, piece: MAGE },
+      d6: { side: BLACK, piece: MAGE },
+      c7: { side: WHITE, piece: LEGIONARY }
+    }
+    const captured: SquareOccupant = {
+      e5: { side: WHITE, piece: MAGE },
+      d4: { side: BLACK, piece: LEGIONARY },
+      g8: { side: BLACK, piece: TEMPLAR }
+    }
+    const blast = play(WHITE, blasted, { from: 'e5', to: 'e5', captures: ['d6'] })
+    const take = play(BLACK, captured, { from: 'g8', to: 'e5', captures: ['e5'] })
+    expect(blast.occupancy['c7']).toEqual({ side: WHITE, piece: LEGIONARY })
+    expect(take.occupancy['d4']).toEqual({ side: BLACK, piece: LEGIONARY })
+  })
+})
+describe('mage blast slots and castling', () => {
+  it('opens a slot for every piece the blast destroys, its own side included', () => {
+    const occupancy: SquareOccupant = {
+      e5: { side: WHITE, piece: MAGE },
+      d6: { side: BLACK, piece: HERALD },
+      f4: { side: BLACK, piece: TEMPLAR },
+      f6: { side: WHITE, piece: TEMPLAR },
+      e6: { side: WHITE, piece: LEGIONARY }
+    }
+    const blast: Move = { from: 'e5', to: 'e5', captures: ['d6', 'e6', 'f4', 'f6'] }
+    const { state } = play(WHITE, occupancy, blast)
+    expect(state.promotions[BLACK]).toEqual([
+      { file: 3, piece: [HERALD] },
+      { file: 5, piece: [TEMPLAR] }
+    ])
+    expect(state.promotions[WHITE]).toEqual([{ file: 5, piece: [TEMPLAR] }])
+  })
+  it('takes away castling on the wing whose sentinel it destroys, on either side', () => {
+    const enemy: SquareOccupant = {
+      l2: { side: BLACK, piece: MAGE },
+      m1: { side: WHITE, piece: SENTINEL }
+    }
+    const own: SquareOccupant = {
+      l12: { side: BLACK, piece: MAGE },
+      m13: { side: BLACK, piece: SENTINEL },
+      k13: { side: WHITE, piece: HERALD }
+    }
+    const first = play(BLACK, enemy, { from: 'l2', to: 'l2', captures: ['m1'] })
+    const second = play(BLACK, own, { from: 'l12', to: 'l12', captures: ['k13', 'm13'] })
+    expect(first.state.castlingSide[WHITE]).toEqual({ left: true, right: false })
+    expect(second.state.castlingSide[BLACK]).toEqual({ left: true, right: false })
+  })
+})
+describe('mage riposte', () => {
+  const lines: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: TEMPLAR },
+    e9: { side: BLACK, piece: MAGE }
+  }
+  const blast: Move = { from: 'e9', to: 'e9', captures: ['d8'] }
+  it('arms the riposte by blasting a piece on a clear line of the enemy marshal', () => {
+    expect(play(BLACK, lines, blast).state.riposte).toBe(true)
+  })
+  it('does not arm it when the line is blocked, even by the mage itself', () => {
+    const blocked: SquareOccupant = { ...lines, d6: { side: WHITE, piece: LEGIONARY } }
+    const shield: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d6: { side: BLACK, piece: MAGE },
+      d7: { side: WHITE, piece: TEMPLAR }
+    }
+    const behind: Move = { from: 'd6', to: 'd6', captures: ['d7'] }
+    expect(play(BLACK, blocked, blast).state.riposte).toBe(false)
+    expect(play(BLACK, shield, behind).state.riposte).toBe(false)
+  })
+  it('counts the square the victim stood on, not the square of the mage', () => {
+    const off: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d10: { side: BLACK, piece: MAGE },
+      c9: { side: WHITE, piece: TEMPLAR }
+    }
+    const move: Move = { from: 'd10', to: 'd10', captures: ['c9'] }
+    expect(play(BLACK, off, move).state.riposte).toBe(false)
+  })
+  it('arms the riposte when only one of several blasted pieces lies on its lines', () => {
+    const several: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: WHITE, piece: TEMPLAR },
+      c9: { side: WHITE, piece: HERALD },
+      c8: { side: BLACK, piece: MAGE }
+    }
+    const move: Move = { from: 'c8', to: 'c8', captures: ['c9', 'd8'] }
+    expect(play(BLACK, several, move).state.riposte).toBe(true)
+  })
+})
+describe('mage riposte on the board after the blast', () => {
+  it('judges the line after the blast has cleared it', () => {
+    const cleared: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d6: { side: BLACK, piece: LEGIONARY },
+      d7: { side: WHITE, piece: TEMPLAR },
+      e7: { side: BLACK, piece: MAGE }
+    }
+    const move: Move = { from: 'e7', to: 'e7', captures: ['d6', 'd7'] }
+    expect(play(BLACK, cleared, move).state.riposte).toBe(true)
+  })
+  it('ignores the pieces of its own side that the restricted blast destroys', () => {
+    const own: SquareOccupant = {
+      h8: { side: BLACK, piece: MARSHAL },
+      e5: { side: WHITE, piece: MAGE },
+      f6: { side: WHITE, piece: LEGIONARY },
+      e4: { side: BLACK, piece: HERALD }
+    }
+    const move: Move = { from: 'e5', to: 'e5', captures: ['f6', 'e4'] }
+    expect(play(WHITE, own, move).state.riposte).toBe(false)
+  })
+  it('gives its own marshal no riposte for its own pieces the restricted blast destroys', () => {
+    const own: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: WHITE, piece: TEMPLAR },
+      e9: { side: WHITE, piece: MAGE },
+      f10: { side: BLACK, piece: HERALD }
+    }
+    const blasted = play(WHITE, own, { from: 'e9', to: 'e9', captures: ['d8', 'f10'] })
+    const next = position(blasted.side, blasted.occupancy, blasted.state)
+    expect(apply(next, { from: 'a13', to: 'b13' }, blasted.match).state.riposte).toBe(false)
+  })
+})
+describe('mage progress and slots', () => {
+  const fallen: SquareOccupant = {
+    e5: { side: WHITE, piece: MAGE },
+    g8: { side: BLACK, piece: TEMPLAR }
+  }
+  const take: Move = { from: 'g8', to: 'e5', captures: ['e5'] }
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: MAGE } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'h8' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a blast and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: MAGE },
+      h8: { side: BLACK, piece: HERALD },
+      g8: { side: BLACK, piece: LEGIONARY }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g7', captures: ['h8', 'g8'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+  it('opens a mage slot on the file it dies on', () => {
+    const { state } = play(BLACK, fallen, take)
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [MAGE] }])
+  })
+  it('adds a second fallen mage to the same slot', () => {
+    const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [MAGE] }))
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [MAGE, MAGE] }])
   })
 })

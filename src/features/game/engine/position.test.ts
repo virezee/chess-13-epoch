@@ -2,7 +2,17 @@ import type { Side, Piece, SquareOccupant } from '@/types/material'
 import type { Move, State, Save } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, EMPEROR, MARSHAL, SENTINEL, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  EMPEROR,
+  MARSHAL,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
+import { legality } from './legality'
 import { position } from './position'
 import { apply } from './apply'
 import { opening } from './opening'
@@ -162,5 +172,37 @@ describe('emperor in the herald example from the rules', () => {
       awake: false
     })
     expect(standing.position.occupancy['e1']).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+})
+describe('emperor woken by a mage', () => {
+  it('wakes when a mage stands beside it, although the blast would pass around it', () => {
+    const occupancy: SquareOccupant = { ...sleeper, d2: { side: BLACK, piece: MAGE } }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('stays asleep during the opponent turn beside a mage', () => {
+    const occupancy: SquareOccupant = { ...sleeper, d2: { side: BLACK, piece: MAGE } }
+    expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('survives a blast while it sleeps', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      d2: { side: BLACK, piece: MAGE },
+      e2: { side: WHITE, piece: LEGIONARY }
+    }
+    expect(legality(position(BLACK, occupancy, opening().state))).toContainEqual({
+      from: 'd2',
+      to: 'd2',
+      captures: ['e2']
+    })
+  })
+  it('wakes once a mage blasts its marshal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, g2: { side: BLACK, piece: MAGE } }
+    const blast: Move = { from: 'g2', to: 'g2', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), blast, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
   })
 })
