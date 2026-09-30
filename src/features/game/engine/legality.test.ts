@@ -340,20 +340,25 @@ describe('legionary pinned on a rank or taking en passant', () => {
     expect(setup(WHITE, occupancy).checkers).toEqual(['e7'])
     expect(destinations(WHITE, occupancy, 'd7', burst)).toEqual(['e8'])
   })
+})
+describe('en passant and the other pieces', () => {
+  const burst: Partial<State> = { enPassant: { target: 'e8', captured: 'e7' } }
   it('lets only a legionary take en passant', () => {
     const occupancy: SquareOccupant = {
       a1: { side: WHITE, piece: POPE },
       c5: { side: WHITE, piece: TEMPLAR },
       d7: { side: WHITE, piece: HERALD },
       f7: { side: WHITE, piece: MAGE },
+      e10: { side: WHITE, piece: SENTINEL },
       e7: { side: BLACK, piece: LEGIONARY },
       m13: { side: BLACK, piece: POPE }
     }
     const moves = legality(setup(WHITE, occupancy, burst)).filter(({ to }) => to === 'e8')
-    expect(moves).toHaveLength(3)
+    expect(moves).toHaveLength(4)
     expect(moves).toContainEqual({ from: 'c5', to: 'e8' })
     expect(moves).toContainEqual({ from: 'd7', to: 'e8' })
     expect(moves).toContainEqual({ from: 'f7', to: 'e8' })
+    expect(moves).toContainEqual({ from: 'e10', to: 'e8' })
   })
 })
 describe('herald under a pin', () => {
@@ -734,5 +739,174 @@ describe('mage, the command zone and the enemy emperor', () => {
     expect(destinations(BLACK, occupancy, 'k4')).not.toContain('k4')
     expect(destinations(BLACK, shielded, 'e5')).toContain('d4')
     expect(destinations(BLACK, shielded, 'k4')).toContain('k4')
+  })
+})
+describe('sentinel under a pin', () => {
+  it('cannot move off a diagonal pin, since it never moves diagonally', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      c3: { side: WHITE, piece: SENTINEL },
+      f6: { side: BLACK, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, occupancy, 'c3')).toEqual([])
+  })
+  it('slides along a file or a rank pin and may take the piece pinning it', () => {
+    const file: SquareOccupant = {
+      e1: { side: WHITE, piece: POPE },
+      e4: { side: WHITE, piece: SENTINEL },
+      e7: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const rank: SquareOccupant = {
+      a5: { side: WHITE, piece: POPE },
+      d5: { side: WHITE, piece: SENTINEL },
+      f5: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(new Set(destinations(WHITE, file, 'e4'))).toEqual(new Set(['e2', 'e3', 'e5', 'e6', 'e7']))
+    expect(new Set(destinations(WHITE, rank, 'd5'))).toEqual(new Set(['b5', 'c5', 'e5', 'f5']))
+  })
+})
+describe('sentinel in check', () => {
+  const checked: SquareOccupant = {
+    e4: { side: WHITE, piece: POPE },
+    k4: { side: BLACK, piece: SENTINEL },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('blocks a check, or takes the checker from further than it can move quietly', () => {
+    const blocking: SquareOccupant = { ...checked, h7: { side: WHITE, piece: SENTINEL } }
+    const taking: SquareOccupant = { ...checked, k10: { side: WHITE, piece: SENTINEL } }
+    expect(destinations(WHITE, blocking, 'h7')).toEqual(['h4'])
+    expect(destinations(WHITE, taking, 'k10')).toEqual(['k4'])
+  })
+  it('passes its own piece toward its marshal to block, only when enhanced', () => {
+    const restricted: SquareOccupant = {
+      ...checked,
+      h7: { side: WHITE, piece: SENTINEL },
+      h6: { side: WHITE, piece: MAGE }
+    }
+    const enhanced: SquareOccupant = { ...restricted, l4: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'h7')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'h7')).toEqual(['h4'])
+  })
+  it('has no move in a double check, even onto a checker', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      g10: { side: WHITE, piece: SENTINEL },
+      g7: { side: BLACK, piece: TEMPLAR },
+      h7: { side: BLACK, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, occupancy, 'g10')).toEqual([])
+  })
+})
+describe('sentinel giving check', () => {
+  const popes: SquareOccupant = {
+    a1: { side: WHITE, piece: POPE },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('checks along a file or rank up to 6 tiles, and from 7 only when enhanced', () => {
+    const six: SquareOccupant = { ...popes, m7: { side: WHITE, piece: SENTINEL } }
+    const seven: SquareOccupant = { ...popes, m6: { side: WHITE, piece: SENTINEL } }
+    const enhanced: SquareOccupant = { ...seven, j4: { side: WHITE, piece: MARSHAL } }
+    expect(setup(BLACK, six).checkers).toEqual(['m7'])
+    expect(setup(BLACK, seven).checkers).toEqual([])
+    expect(setup(BLACK, enhanced).checkers).toEqual(['m6'])
+  })
+  it('never checks along a diagonal, nor through its own piece it could pass', () => {
+    const diagonal: SquareOccupant = { ...popes, l12: { side: WHITE, piece: SENTINEL } }
+    const passing: SquareOccupant = {
+      ...popes,
+      m6: { side: WHITE, piece: SENTINEL },
+      m8: { side: WHITE, piece: MAGE },
+      j9: { side: WHITE, piece: MARSHAL }
+    }
+    expect(setup(BLACK, diagonal).checkers).toEqual([])
+    expect(setup(BLACK, passing).checkers).toEqual([])
+  })
+})
+describe('sentinel giving a discovered check', () => {
+  it('gives a discovered check by moving off a line', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      c3: { side: WHITE, piece: HERALD },
+      e5: { side: WHITE, piece: SENTINEL },
+      g7: { side: BLACK, piece: POPE }
+    }
+    expect(checkersAfter(occupancy, { from: 'e5', to: 'e2' })).toEqual(['c3'])
+  })
+  it('checks by passing its own piece onto a line to the pope', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      a4: { side: WHITE, piece: MARSHAL },
+      e1: { side: WHITE, piece: SENTINEL },
+      e2: { side: WHITE, piece: MAGE },
+      h5: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, occupancy, 'e1')).toContain('e5')
+    expect(checkersAfter(occupancy, { from: 'e1', to: 'e5' })).toEqual(['e5'])
+  })
+})
+describe('pope and sentinel attacks', () => {
+  const left: Partial<State> = {
+    castlingSide: {
+      [WHITE]: { left: true, right: false },
+      [BLACK]: { left: false, right: false }
+    }
+  }
+  it('cannot step onto or take on a square a sentinel attacks from further than it moves', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      e11: { side: BLACK, piece: SENTINEL },
+      f5: { side: BLACK, piece: TEMPLAR },
+      f11: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const squares = destinations(WHITE, occupancy, 'e4')
+    expect(squares).not.toContain('e5')
+    expect(squares).not.toContain('f5')
+    expect(squares).toContain('d5')
+  })
+  it('cannot castle across a square a sentinel attacks', () => {
+    const castle: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL },
+      e7: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, castle, 'g1', left)).not.toContain('d1')
+  })
+  it('castles only with its own sentinel standing on the corner', () => {
+    const partner: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: TEMPLAR },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, partner, 'g1', left)).not.toContain('d1')
+  })
+})
+describe('sentinel, the command zone and the enemy emperor', () => {
+  it('keeps a sentinel near the enemy marshal to 3 tiles, never passing through toward it', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      e5: { side: WHITE, piece: SENTINEL },
+      e6: { side: WHITE, piece: MAGE },
+      h8: { side: BLACK, piece: MARSHAL },
+      a13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, occupancy, 'e5')).toHaveLength(9)
+  })
+  it('forbids a sentinel move that wakes the enemy emperor onto its own pope', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: BLACK, piece: POPE },
+      c3: { side: WHITE, piece: EMPEROR, awake: false },
+      m12: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: POPE },
+      f4: { side: BLACK, piece: SENTINEL }
+    }
+    const shielded: SquareOccupant = { ...occupancy, b2: { side: BLACK, piece: SENTINEL } }
+    expect(destinations(BLACK, occupancy, 'f4')).not.toContain('f3')
+    expect(destinations(BLACK, shielded, 'f4')).toContain('f3')
   })
 })

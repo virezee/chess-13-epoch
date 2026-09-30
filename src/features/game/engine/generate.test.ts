@@ -2,7 +2,7 @@ import type { SquareOccupant } from '@/types/material'
 import type { Move } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, MARSHAL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { POPE, MARSHAL, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { isEnhanced, generate } from './generate'
 
 const destinations = (moves: Move[]): string[] => moves.map(({ to }) => to)
@@ -36,6 +36,15 @@ const mageFrom = (
 }
 const blasts = (moves: Move[]): Set<string>[] =>
   moves.filter(({ from, to }) => from === to).map(({ captures }) => new Set(captures))
+const sentinelFrom = (
+  square: string,
+  marshal: string | null,
+  occupancy: SquareOccupant = {}
+): string[] => {
+  const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: SENTINEL } }
+  const castling = { left: false, right: false }
+  return destinations(generate(WHITE, SENTINEL, board, marshal, square, castling, [], null))
+}
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
     for (const square of ['h8', 'd8', 'h4', 'a1', 'd1', 'g7'])
@@ -118,5 +127,26 @@ describe('command zone on the mage', () => {
   it('judges the zone from the square the move starts on', () => {
     expect(destinations(mageFrom('e5', 'a1'))).toContain('g7')
     expect(destinations(mageFrom('f6', 'a1'))).not.toContain('h8')
+  })
+})
+describe('command zone on the sentinel', () => {
+  const enemy: SquareOccupant = { a13: { side: BLACK, piece: MAGE } }
+  const own: SquareOccupant = { a3: { side: WHITE, piece: MAGE } }
+  it('moves 6 tiles only inside the zone', () => {
+    expect(sentinelFrom('a1', 'c3')).toHaveLength(12)
+    expect(sentinelFrom('a1', 'f6')).toHaveLength(6)
+    expect(sentinelFrom('a1', null)).toHaveLength(6)
+  })
+  it('captures along the whole line only inside the zone', () => {
+    expect(sentinelFrom('a1', 'c3', enemy)).toContain('a13')
+    expect(sentinelFrom('a1', 'f6', enemy)).not.toContain('a13')
+  })
+  it('passes its own pieces toward the marshal only inside the zone', () => {
+    expect(sentinelFrom('a1', 'c5', own)).toContain('a4')
+    expect(sentinelFrom('a1', 'c6', own)).not.toContain('a4')
+  })
+  it('judges the zone from the square the move starts on', () => {
+    expect(sentinelFrom('e5', 'a1')).toContain('e11')
+    expect(sentinelFrom('f6', 'a1')).not.toContain('f10')
   })
 })

@@ -36,6 +36,16 @@ const play = (
 const slots = (...slot: State['promotions'][typeof WHITE]): Partial<State> => ({
   promotions: { [WHITE]: slot, [BLACK]: [] }
 })
+const follow = (save: Save, move: Move): Save =>
+  apply(position(save.side, save.occupancy, save.state), move, save.match)
+const WINGS: SquareOccupant = {
+  g1: { side: WHITE, piece: POPE },
+  a1: { side: WHITE, piece: SENTINEL },
+  m1: { side: WHITE, piece: SENTINEL },
+  g13: { side: BLACK, piece: POPE },
+  a13: { side: BLACK, piece: SENTINEL },
+  m13: { side: BLACK, piece: SENTINEL }
+}
 describe('legionary en passant right', () => {
   it('opens behind a white burst from rank 3 to rank 7', () => {
     const occupancy: SquareOccupant = { e3: { side: WHITE, piece: LEGIONARY } }
@@ -470,5 +480,92 @@ describe('mage progress and slots', () => {
   it('adds a second fallen mage to the same slot', () => {
     const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [MAGE] }))
     expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [MAGE, MAGE] }])
+  })
+})
+describe('sentinel riposte', () => {
+  const lines: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: TEMPLAR },
+    h8: { side: BLACK, piece: SENTINEL }
+  }
+  const take: Move = { from: 'h8', to: 'd8', captures: ['d8'] }
+  it('arms the riposte by capturing on a clear line of the enemy marshal', () => {
+    expect(play(BLACK, lines, take).state.riposte).toBe(true)
+  })
+  it('does not arm it when the line is blocked', () => {
+    const blocked: SquareOccupant = { ...lines, d6: { side: WHITE, piece: LEGIONARY } }
+    expect(play(BLACK, blocked, take).state.riposte).toBe(false)
+  })
+  it('does not arm it by capturing off the lines', () => {
+    const off: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: TEMPLAR },
+      m5: { side: BLACK, piece: SENTINEL }
+    }
+    expect(play(BLACK, off, { from: 'm5', to: 'm1', captures: ['m1'] }).state.riposte).toBe(false)
+  })
+})
+describe('sentinel progress and slots', () => {
+  const fallen: SquareOccupant = {
+    e5: { side: WHITE, piece: SENTINEL },
+    g8: { side: BLACK, piece: TEMPLAR }
+  }
+  const take: Move = { from: 'g8', to: 'e5', captures: ['e5'] }
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: SENTINEL } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: SENTINEL },
+      g11: { side: BLACK, piece: TEMPLAR }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g11', captures: ['g11'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+  it('opens a sentinel slot on the file it dies on', () => {
+    const { state } = play(BLACK, fallen, take)
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [SENTINEL] }])
+  })
+  it('adds a second fallen sentinel to the same slot', () => {
+    const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [SENTINEL] }))
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [SENTINEL, SENTINEL] }])
+  })
+})
+describe('sentinel and castling rights', () => {
+  it('loses the right on its own wing once it moves, for good even if it comes back', () => {
+    const start: Save = { ...opening(), occupancy: WINGS }
+    const moved = follow(start, { from: 'a1', to: 'a3' })
+    const reply = follow(moved, { from: 'm13', to: 'm11' })
+    const back = follow(reply, { from: 'a3', to: 'a1' })
+    expect(moved.state.castlingSide[WHITE]).toEqual({ left: false, right: true })
+    expect(reply.state.castlingSide[BLACK]).toEqual({ left: true, right: false })
+    expect(back.state.castlingSide[WHITE]).toEqual({ left: false, right: true })
+  })
+  it('loses the right when an enemy captures it on its corner', () => {
+    const occupancy: SquareOccupant = { ...WINGS, m7: { side: BLACK, piece: SENTINEL } }
+    const start: Save = { ...opening(), side: BLACK, occupancy }
+    const taken = follow(start, { from: 'm7', to: 'm1', captures: ['m1'] })
+    expect(taken.state.castlingSide[WHITE]).toEqual({ left: true, right: false })
+  })
+})
+describe('sentinel moved by castling', () => {
+  it('lands beside the pope, from a1 to e1 or from m1 to i1, and ends both rights', () => {
+    const start: Save = { ...opening(), occupancy: WINGS }
+    const left = follow(start, { from: 'g1', to: 'd1', sentinel: { from: 'a1', to: 'e1' } })
+    const right = follow(start, { from: 'g1', to: 'j1', sentinel: { from: 'm1', to: 'i1' } })
+    expect(left.occupancy['e1']).toEqual({ side: WHITE, piece: SENTINEL })
+    expect(left.occupancy['a1']).toBeUndefined()
+    expect(right.occupancy['i1']).toEqual({ side: WHITE, piece: SENTINEL })
+    expect(right.occupancy['m1']).toBeUndefined()
+    expect(left.state.castlingSide[WHITE]).toEqual({ left: false, right: false })
+  })
+  it('lands beside the pope for black, from a13 to e13 or from m13 to i13', () => {
+    const start: Save = { ...opening(), side: BLACK, occupancy: WINGS }
+    const left = follow(start, { from: 'g13', to: 'd13', sentinel: { from: 'a13', to: 'e13' } })
+    const right = follow(start, { from: 'g13', to: 'j13', sentinel: { from: 'm13', to: 'i13' } })
+    expect(left.occupancy['e13']).toEqual({ side: BLACK, piece: SENTINEL })
+    expect(right.occupancy['i13']).toEqual({ side: BLACK, piece: SENTINEL })
   })
 })

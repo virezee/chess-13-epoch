@@ -2,7 +2,7 @@ import type { Side, SquareOccupant } from '@/types/material'
 import type { Move, State } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, MARSHAL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { POPE, MARSHAL, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { position } from './position'
 import { opening } from './opening'
 import { notation } from './notation'
@@ -121,5 +121,25 @@ describe('mage notation', () => {
     }
     expect(write(WHITE, enhanced, { from: 'g7', to: 'g9' })).toBe('Gg7-g9^')
     expect(write(WHITE, enhanced, { from: 'g7', to: 'g7', captures: ['h8'] })).toBe('Gg7xg7^')
+  })
+})
+describe('sentinel notation', () => {
+  it('writes S for either side, a dash for a move and an x for a capture', () => {
+    const capture: SquareOccupant = {
+      e1: { side: WHITE, piece: SENTINEL },
+      e7: { side: BLACK, piece: HERALD }
+    }
+    expect(write(BLACK, { e7: { side: BLACK, piece: SENTINEL } }, { from: 'e7', to: 'e4' })).toBe(
+      'Se7-e4'
+    )
+    expect(write(WHITE, capture, { from: 'e1', to: 'e7', captures: ['e7'] })).toBe('Se1xe7')
+  })
+  it('marks a move made inside the command zone, passing its own pieces as well', () => {
+    const enhanced: SquareOccupant = {
+      e1: { side: WHITE, piece: SENTINEL },
+      e2: { side: WHITE, piece: MAGE },
+      c4: { side: WHITE, piece: MARSHAL }
+    }
+    expect(write(WHITE, enhanced, { from: 'e1', to: 'e5' })).toBe('Se1-e5^')
   })
 })

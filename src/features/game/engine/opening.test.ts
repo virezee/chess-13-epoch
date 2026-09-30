@@ -2,7 +2,7 @@ import type { PieceName, SquareOccupant } from '@/types/material'
 import { describe, it, expect } from 'vitest'
 import { FILES } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
-import { MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { opening } from './opening'
 
 const placed = (name: PieceName): SquareOccupant =>
@@ -38,6 +38,14 @@ describe('opening placement', () => {
       j1: { side: WHITE, piece: MAGE },
       d13: { side: BLACK, piece: MAGE },
       j13: { side: BLACK, piece: MAGE }
+    })
+  })
+  it('puts the sentinels on a1, m1, a13 and m13', () => {
+    expect(placed(SENTINEL)).toEqual({
+      a1: { side: WHITE, piece: SENTINEL },
+      m1: { side: WHITE, piece: SENTINEL },
+      a13: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: SENTINEL }
     })
   })
 })

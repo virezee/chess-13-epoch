@@ -52,13 +52,17 @@ Each side starts with 26 pieces: a full back rank of nine kinds, and thirteen Le
 
 Requires [Bun](https://bun.com).
 
-```bash
+```sh
 bun i
+bun worker                           # ws://localhost:8787
 bun dev                              # http://localhost:3000
-bun run lint
-bun run format:check
+bun lint
+bun format
+bun format:check
+bun run test
 bun run build
-bunx wrangler deploy --cwd worker    # online rooms, to Cloudflare
+bun deploy:worker                    # online rooms, to Cloudflare
+bun start
 ```
 
 Built with Next.js 16, React 19, Tailwind CSS 4 and TypeScript. The game logic has no runtime dependencies. Online play runs on a Cloudflare Worker with one Durable Object per room. The room keeps the game, so a reload picks up where it left off, and a player who drops out has one minute to come back before the game is lost.

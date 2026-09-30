@@ -220,3 +220,55 @@ describe('mage insufficient material and stalemate', () => {
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
   })
 })
+describe('sentinel delivering mate or repeating a position', () => {
+  it('mates along the back rank from 6 tiles away, further than it could move', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      g13: { side: WHITE, piece: SENTINEL },
+      a13: { side: BLACK, piece: POPE },
+      a12: { side: BLACK, piece: LEGIONARY },
+      b12: { side: BLACK, piece: LEGIONARY }
+    }
+    const next = position(BLACK, occupancy, still())
+    const moves = legality(next)
+    expect(moves).toEqual([])
+    expect(result(next, moves, opening().match)).toEqual({ winner: WHITE, reason: CHECKMATE })
+  })
+  it('loses for the side whose move brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      d3: { side: WHITE, piece: SENTINEL },
+      j10: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'd3', to: 'd4' },
+      { from: 'j10', to: 'j9' },
+      { from: 'd4', to: 'd3' },
+      { from: 'j9', to: 'j10' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+})
+describe('sentinel insufficient material and stalemate', () => {
+  it('keeps the game going while a sentinel is on the board', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      e5: { side: WHITE, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toBeNull()
+  })
+  it('wins for the side whose pinned sentinel and pope have no move', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b2: { side: WHITE, piece: SENTINEL },
+      e5: { side: BLACK, piece: HERALD },
+      b3: { side: BLACK, piece: LEGIONARY },
+      c2: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})

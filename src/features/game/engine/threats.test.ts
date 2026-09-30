@@ -113,15 +113,17 @@ describe('pinned pieces watching an assassin landing', () => {
   it('lets the assassin land on b4 while nothing watches it', () => {
     expect(capturesFrom(BLACK, victim, 'b8')).toContainEqual(['b5'])
   })
-  it('forbids the landing when a pinned legionary, templar, herald or mage watches b4', () => {
+  it('forbids the landing on b4 for a pinned legionary, templar, herald, mage or sentinel', () => {
     const legionary: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: LEGIONARY } }
     const templar: SquareOccupant = { ...rank, d1: { side: WHITE, piece: TEMPLAR } }
     const herald: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: HERALD } }
     const mage: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: MAGE } }
+    const sentinel: SquareOccupant = { ...rank, b1: { side: WHITE, piece: SENTINEL } }
     expect(capturesFrom(BLACK, legionary, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, templar, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, herald, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, mage, 'b8')).not.toContainEqual(['b5'])
+    expect(capturesFrom(BLACK, sentinel, 'b8')).not.toContainEqual(['b5'])
   })
 })
 describe('supporting a marshal capture', () => {
@@ -302,5 +304,79 @@ describe('mage supporting a marshal capture', () => {
     }
     expect(capturesFrom(WHITE, pinned, 'b9')).toContainEqual(['b4'])
     expect(capturesFrom(WHITE, beside, 'c8')).toContainEqual(['c3'])
+  })
+})
+describe('sentinel attacks', () => {
+  const sentinel: SquareOccupant = { c2: { side: WHITE, piece: SENTINEL } }
+  it('attacks 6 tiles away while restricted and the whole line when enhanced', () => {
+    const enhanced: SquareOccupant = { ...sentinel, a5: { side: WHITE, piece: MARSHAL } }
+    expect(attackers(WHITE, sentinel, 'c8')).toEqual(['c2'])
+    expect(attackers(WHITE, sentinel, 'c9')).toEqual([])
+    expect(attackers(WHITE, enhanced, 'c13')).toEqual(['c2'])
+  })
+  it('never attacks along a diagonal', () => {
+    expect(attackers(WHITE, sentinel, 'd3')).toEqual([])
+  })
+  it('does not attack through its own piece, even one it could pass on a quiet move', () => {
+    const passing: SquareOccupant = {
+      ...sentinel,
+      c4: { side: WHITE, piece: MAGE },
+      a5: { side: WHITE, piece: MARSHAL }
+    }
+    expect(attackers(WHITE, passing, 'c6')).toEqual([])
+  })
+  it('keeps attacking while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: SENTINEL },
+      f6: { side: BLACK, piece: HERALD }
+    }
+    expect(attackers(WHITE, pinned, 'c8')).toEqual(['c3'])
+  })
+})
+describe('sentinel watching an assassin landing', () => {
+  const victim: SquareOccupant = {
+    e10: { side: BLACK, piece: ASSASSIN },
+    e7: { side: WHITE, piece: HERALD }
+  }
+  it('watches the landing from further than it can move quietly', () => {
+    const watched: SquareOccupant = { ...victim, a6: { side: WHITE, piece: SENTINEL } }
+    expect(capturesFrom(BLACK, watched, 'e10')).not.toContainEqual(['e7'])
+  })
+  it('watches the landing through the squares the assassin and its victim leave', () => {
+    const watched: SquareOccupant = { ...victim, e12: { side: WHITE, piece: SENTINEL } }
+    expect(capturesFrom(BLACK, watched, 'e10')).not.toContainEqual(['e7'])
+  })
+})
+describe('sentinel supporting a marshal capture', () => {
+  it('supports a marshal capture from further than it can move quietly', () => {
+    const supported: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      j8: { side: WHITE, piece: SENTINEL }
+    }
+    expect(capturesFrom(WHITE, supported, 'd4')).toContainEqual(['d8'])
+  })
+  it('gives support from 7 tiles only when enhanced', () => {
+    const restricted: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      k8: { side: WHITE, piece: SENTINEL }
+    }
+    const enhanced: SquareOccupant = {
+      g5: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      k8: { side: WHITE, piece: SENTINEL }
+    }
+    expect(capturesFrom(WHITE, restricted, 'd4')).not.toContainEqual(['d8'])
+    expect(capturesFrom(WHITE, enhanced, 'g5')).toContainEqual(['d8'])
+  })
+  it('supports a marshal capture while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: SENTINEL },
+      f6: { side: BLACK, piece: HERALD },
+      e9: { side: WHITE, piece: MARSHAL },
+      c7: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['c7'])
   })
 })
