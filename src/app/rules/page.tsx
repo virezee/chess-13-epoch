@@ -26,6 +26,24 @@ export const metadata: Metadata = {
 export default function Rules() {
   return (
     <main className='mx-auto flex w-full max-w-220 flex-1 select-text flex-col gap-4 px-4 py-5 font-reading xl:px-5'>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Chess 13: Epoch',
+                item: 'https://chess-13-epoch.vercel.app'
+              },
+              { '@type': 'ListItem', position: 2, name: 'Rules' }
+            ]
+          })
+        }}
+      />
       <Intro />
       <Notice />
       <Board />
