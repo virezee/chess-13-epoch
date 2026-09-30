@@ -916,6 +916,18 @@ describe('sentinel, the command zone and the enemy emperor', () => {
   })
 })
 describe('assassin capturing', () => {
+  it('cannot land on a watched tile while enhanced either', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: ASSASSIN },
+      c3: { side: WHITE, piece: MARSHAL },
+      a10: { side: BLACK, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const watched: SquareOccupant = { ...occupancy, d11: { side: BLACK, piece: SENTINEL } }
+    expect(destinations(WHITE, occupancy, 'a1')).toContain('a11')
+    expect(destinations(WHITE, watched, 'a1')).not.toContain('a11')
+  })
   it('lands beside a dormant emperor, which guards nothing, but not beside an awake one', () => {
     const occupancy: SquareOccupant = {
       m1: { side: WHITE, piece: POPE },
@@ -998,6 +1010,16 @@ describe('assassin giving check', () => {
     expect(setup(BLACK, far).checkers).toEqual([])
     expect(setup(BLACK, enhanced).checkers).toEqual(['g1'])
   })
+  it('gives no check while enhanced either when the tile behind the pope is watched', () => {
+    const enhanced: SquareOccupant = {
+      ...popes,
+      g1: { side: WHITE, piece: ASSASSIN },
+      c1: { side: WHITE, piece: MARSHAL }
+    }
+    const watched: SquareOccupant = { ...enhanced, h9: { side: BLACK, piece: LEGIONARY } }
+    expect(setup(BLACK, enhanced).checkers).toEqual(['g1'])
+    expect(setup(BLACK, watched).checkers).toEqual([])
+  })
   it('checks a pope in a corner by aiming at the corner itself, unless the corner is watched', () => {
     const corner: SquareOccupant = {
       a1: { side: WHITE, piece: POPE },
@@ -1069,6 +1091,18 @@ describe('pope and assassin attacks', () => {
     }
     const guarded: SquareOccupant = { ...occupancy, d3: { side: WHITE, piece: LEGIONARY } }
     expect(destinations(WHITE, occupancy, 'e4')).not.toContain('e5')
+    expect(destinations(WHITE, guarded, 'e4')).toContain('e5')
+  })
+  it('cannot step where an enhanced assassin reaches past 6 tiles, unless the tile behind is guarded', () => {
+    const restricted: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      m5: { side: BLACK, piece: ASSASSIN },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...restricted, m9: { side: BLACK, piece: MARSHAL } }
+    const guarded: SquareOccupant = { ...enhanced, c4: { side: WHITE, piece: LEGIONARY } }
+    expect(destinations(WHITE, restricted, 'e4')).toContain('e5')
+    expect(destinations(WHITE, enhanced, 'e4')).not.toContain('e5')
     expect(destinations(WHITE, guarded, 'e4')).toContain('e5')
   })
   it('castles past an assassin aiming at e1 from above, whose landing would be off the board', () => {

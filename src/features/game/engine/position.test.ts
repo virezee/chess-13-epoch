@@ -265,6 +265,14 @@ describe('emperor woken by an assassin', () => {
     }
     expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
   })
+  it('stays asleep when the tile behind it is watched, since the assassin could not take it', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      a1: { side: BLACK, piece: ASSASSIN },
+      g2: { side: WHITE, piece: HERALD }
+    }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
   it('stays asleep under an assassin aiming from above, whose landing would be off the board', () => {
     const occupancy: SquareOccupant = { ...sleeper, e6: { side: BLACK, piece: ASSASSIN } }
     expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
