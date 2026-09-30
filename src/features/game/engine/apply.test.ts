@@ -3,9 +3,10 @@ import type { Move, State, Save } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import { POPE, EMPEROR, MARSHAL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { GUEST } from '@/constants/room'
 import { position } from './position'
+import { apply, canSwap, takeSwap } from './apply'
 import { opening } from './opening'
-import { apply } from './apply'
 
 const play = (
   side: Side,
@@ -45,6 +46,12 @@ describe('legionary en passant right', () => {
   ])('does not open after %s to %s', (from, to) => {
     const occupancy: SquareOccupant = { [from]: { side: WHITE, piece: LEGIONARY } }
     expect(play(WHITE, occupancy, { from, to }).state.enPassant).toBeNull()
+  })
+  it('keeps the right when black swaps sides after a first-move burst', () => {
+    const burst = play(WHITE, { e3: { side: WHITE, piece: LEGIONARY } }, { from: 'e3', to: 'e7' })
+    const next = position(burst.side, burst.occupancy, burst.state)
+    expect(canSwap(next, burst.match)).toBe(true)
+    expect(takeSwap(next, burst.match, GUEST).state.enPassant).toEqual({ target: 'e6', captured: 'e7' })
   })
 })
 describe('legionary en passant capture', () => {
@@ -208,6 +215,16 @@ describe('legionary riposte and progress', () => {
     const take: Move = { from: 'c9', to: 'd8', captures: ['d8'] }
     expect(play(BLACK, occupancy, take).state.riposte).toBe(true)
   })
+  it('does not arm the riposte when the line to the marshal is blocked', () => {
+    const occupancy: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d6: { side: WHITE, piece: LEGIONARY },
+      d8: { side: WHITE, piece: HERALD },
+      c9: { side: BLACK, piece: LEGIONARY }
+    }
+    const take: Move = { from: 'c9', to: 'd8', captures: ['d8'] }
+    expect(play(BLACK, occupancy, take).state.riposte).toBe(false)
+  })
   it('resets the no-progress counter when it promotes in place', () => {
     const waiting: SquareOccupant = { e13: { side: WHITE, piece: LEGIONARY } }
     const move: Move = { from: 'e13', to: 'e13', promotesTo: MAGE }
@@ -223,5 +240,56 @@ describe('legionary riposte and progress', () => {
     )
     expect(step.state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
     expect(capture.state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+})
+describe('herald riposte', () => {
+  const lines: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: TEMPLAR },
+    g11: { side: BLACK, piece: HERALD }
+  }
+  const take: Move = { from: 'g11', to: 'd8', captures: ['d8'] }
+  it('arms the riposte by capturing on a clear line of the enemy marshal', () => {
+    expect(play(BLACK, lines, take).state.riposte).toBe(true)
+  })
+  it('does not arm it when the line is blocked', () => {
+    const blocked: SquareOccupant = { ...lines, d6: { side: WHITE, piece: LEGIONARY } }
+    expect(play(BLACK, blocked, take).state.riposte).toBe(false)
+  })
+  it('does not arm it by capturing off the lines', () => {
+    const off: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: TEMPLAR },
+      j4: { side: BLACK, piece: HERALD }
+    }
+    expect(play(BLACK, off, { from: 'j4', to: 'm1', captures: ['m1'] }).state.riposte).toBe(false)
+  })
+})
+describe('herald progress and slots', () => {
+  const fallen: SquareOccupant = {
+    e5: { side: WHITE, piece: HERALD },
+    g8: { side: BLACK, piece: TEMPLAR }
+  }
+  const take: Move = { from: 'g8', to: 'e5', captures: ['e5'] }
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: HERALD } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'j10' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: HERALD },
+      j10: { side: BLACK, piece: TEMPLAR }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'j10', captures: ['j10'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+  it('opens a herald slot on the file it dies on', () => {
+    const { state } = play(BLACK, fallen, take)
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [HERALD] }])
+  })
+  it('adds a second fallen herald to the same slot', () => {
+    const { state } = play(BLACK, fallen, take, slots({ file: 4, piece: [HERALD] }))
+    expect(state.promotions[WHITE]).toEqual([{ file: 4, piece: [HERALD, HERALD] }])
   })
 })

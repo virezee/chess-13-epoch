@@ -1,8 +1,8 @@
 import type { SquareOccupant } from '@/types/material'
 import type { Move } from '@/types/game'
 import { describe, it, expect } from 'vitest'
-import { WHITE } from '@/constants/player'
-import { TEMPLAR, LEGIONARY } from '@/constants/piece'
+import { WHITE, BLACK } from '@/constants/player'
+import { MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { isEnhanced, generate } from './generate'
 
 const destinations = (moves: Move[]): string[] => moves.map(({ to }) => to)
@@ -15,6 +15,15 @@ const legionaryFrom = (square: string, marshal: string | null): string[] => {
   const occupancy: SquareOccupant = { [square]: { side: WHITE, piece: LEGIONARY } }
   const castling = { left: false, right: false }
   return destinations(generate(WHITE, LEGIONARY, occupancy, marshal, square, castling, [], null))
+}
+const heraldFrom = (
+  square: string,
+  marshal: string | null,
+  occupancy: SquareOccupant = {}
+): string[] => {
+  const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: HERALD } }
+  const castling = { left: false, right: false }
+  return destinations(generate(WHITE, HERALD, board, marshal, square, castling, [], null))
 }
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
@@ -50,5 +59,21 @@ describe('command zone on the legionary', () => {
   })
   it('judges the zone from the square the step starts on', () => {
     expect(legionaryFrom('e8', 'e4')).toEqual(['e9', 'e10'])
+  })
+})
+describe('command zone on the herald', () => {
+  const enemy: SquareOccupant = { g8: { side: BLACK, piece: MAGE } }
+  it('slides past 6 tiles only inside the zone', () => {
+    expect(heraldFrom('a1', 'c2')).toContain('m13')
+    expect(heraldFrom('a1', 'm1')).not.toContain('h8')
+    expect(heraldFrom('a1', null)).not.toContain('h8')
+  })
+  it('captures with the straight step only inside the zone', () => {
+    expect(heraldFrom('g7', 'g5', enemy)).toContain('g8')
+    expect(heraldFrom('g7', 'g12', enemy)).not.toContain('g8')
+  })
+  it('judges the zone from the square the move starts on', () => {
+    expect(heraldFrom('e5', 'a1')).toContain('l12')
+    expect(heraldFrom('f6', 'a1')).not.toContain('m13')
   })
 })

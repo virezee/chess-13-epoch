@@ -1,11 +1,12 @@
 import type { Side, Piece, SquareOccupant } from '@/types/material'
-import type { Move, State } from '@/types/game'
+import type { Move, State, Save } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, EMPEROR, MARSHAL, TEMPLAR, LEGIONARY } from '@/constants/piece'
-import { opening } from './opening'
+import { POPE, EMPEROR, MARSHAL, SENTINEL, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
 import { position } from './position'
 import { apply } from './apply'
+import { opening } from './opening'
+import { turn } from './turn'
 
 const emperorAfter = (
   side: Side,
@@ -32,6 +33,10 @@ describe('emperor woken by a templar or a legionary', () => {
     const occupancy: SquareOccupant = { ...sleeper, g4: { side: BLACK, piece: TEMPLAR } }
     expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
   })
+  it('stays asleep during the opponent turn under a legionary', () => {
+    const occupancy: SquareOccupant = { ...sleeper, d2: { side: BLACK, piece: LEGIONARY } }
+    expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
   it('stays asleep while nothing attacks it', () => {
     expect(emperorAfter(WHITE, sleeper)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
   })
@@ -51,6 +56,16 @@ describe('emperor and the marshal', () => {
       k4: { side: BLACK, piece: TEMPLAR }
     }
     const take: Move = { from: 'k4', to: 'm1', captures: ['m1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+  it('wakes once a legionary captures its marshal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, g2: { side: BLACK, piece: LEGIONARY } }
+    const take: Move = { from: 'g2', to: 'h1', captures: ['h1'] }
     const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
     expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
       side: WHITE,
@@ -96,5 +111,56 @@ describe('command zone after a promotion', () => {
     const played = apply(before, promote, opening().match)
     expect(before.enhanced.has('g11')).toBe(false)
     expect(position(BLACK, played.occupancy, played.state).enhanced.has('g11')).toBe(true)
+  })
+})
+describe('emperor woken by a herald', () => {
+  it('wakes when a herald attacks it along a diagonal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, h4: { side: BLACK, piece: HERALD } }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('stays asleep during the opponent turn under a herald', () => {
+    const occupancy: SquareOccupant = { ...sleeper, h4: { side: BLACK, piece: HERALD } }
+    expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('wakes to the straight step only from an enhanced herald', () => {
+    const restricted: SquareOccupant = { ...sleeper, e2: { side: BLACK, piece: HERALD } }
+    const enhanced: SquareOccupant = { ...restricted, b4: { side: BLACK, piece: MARSHAL } }
+    expect(emperorAfter(WHITE, restricted)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+    expect(emperorAfter(WHITE, enhanced)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('wakes once a herald captures its marshal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, k4: { side: BLACK, piece: HERALD } }
+    const take: Move = { from: 'k4', to: 'h1', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+})
+describe('emperor in the herald example from the rules', () => {
+  it('stays asleep when the sentinel leaves the file He4-b7 opened before white moves again', () => {
+    const occupancy: SquareOccupant = {
+      e1: { side: WHITE, piece: EMPEROR, awake: false },
+      e4: { side: WHITE, piece: HERALD },
+      l1: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: POPE },
+      e7: { side: BLACK, piece: SENTINEL },
+      l13: { side: BLACK, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const none = { left: false, right: false }
+    const state: State = { ...opening().state, castlingSide: { [WHITE]: none, [BLACK]: none } }
+    const start: Save = { side: WHITE, occupancy, state, match: opening().match }
+    const opened = turn(start, { from: 'e4', to: 'b7' })
+    const withdrawn = turn(opened.save, { from: 'e7', to: 'f7' })
+    const standing = turn(opened.save, { from: 'm13', to: 'm12' })
+    expect(withdrawn.position.occupancy['e1']).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: false
+    })
+    expect(standing.position.occupancy['e1']).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
   })
 })
