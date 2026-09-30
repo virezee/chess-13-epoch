@@ -1,36 +1,34 @@
 'use client'
 
-import type { Message } from '@/types/tutor'
-import { useState, useEffect, useRef } from 'react'
+import type { Entry } from '@/types/tutor'
+import { useState } from 'react'
 import { USER } from '@/constants/chat'
 import { useTutor } from '../lib/memory'
 import { cn } from '@/lib/cn'
 
-function Messages({ messages, notice }: { messages: Message[]; notice: string | null }) {
-  const box = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (box.current !== null) box.current.scrollTop = box.current.scrollHeight
-  }, [messages])
+function Messages({ messages, notice }: { messages: Entry[]; notice: string | null }) {
   return (
-    <div ref={box} className='flex flex-1 select-text flex-col gap-2 overflow-y-auto p-3'>
-      {messages.length === 0 && (
-        <p className='text-[13px] leading-snug text-ink-faint'>
-          Ask anything about the rules of Chess 13: Epoch or standard chess.
-        </p>
-      )}
-      {messages.map((message, index) => (
-        <p
-          key={index}
-          className={cn(
-            'max-w-[85%] whitespace-pre-wrap rounded-[3px] px-2.5 py-2 text-[13px] leading-snug',
-            message.role === USER
-              ? 'self-end bg-surface-2 text-ink'
-              : 'self-start border border-line text-ink-dim'
-          )}>
-          {message.content === '' ? '…' : message.content}
-        </p>
-      ))}
-      {notice !== null && <p className='text-[12px] leading-snug text-alert'>{notice}</p>}
+    <div className='flex flex-1 select-text flex-col-reverse overflow-y-auto p-3'>
+      <div className='flex flex-col gap-2'>
+        {messages.length === 0 && (
+          <p className='text-[13px] leading-snug text-ink-faint'>
+            Ask anything about the rules of Chess 13: Epoch or standard chess.
+          </p>
+        )}
+        {messages.map(message => (
+          <p
+            key={message.id}
+            className={cn(
+              'max-w-[85%] whitespace-pre-wrap rounded-[3px] px-2.5 py-2 text-[13px] leading-snug',
+              message.role === USER
+                ? 'self-end bg-surface-2 text-ink'
+                : 'self-start border border-line text-ink-dim'
+            )}>
+            {message.content === '' ? '…' : message.content}
+          </p>
+        ))}
+        {notice !== null && <p className='text-[12px] leading-snug text-alert'>{notice}</p>}
+      </div>
     </div>
   )
 }
@@ -71,7 +69,7 @@ function Chatbox({
   onSend,
   onClose
 }: {
-  messages: Message[]
+  messages: Entry[]
   notice: string | null
   isBusy: boolean
   onSend: (question: string) => void

@@ -1,5 +1,5 @@
-import type { Message, Transcript } from '@/types/tutor'
-import { useState, useEffect } from 'react'
+import type { Message, Entry, Transcript, Conversation } from '@/types/tutor'
+import { useState, useSyncExternalStore } from 'react'
 import { TUTOR } from '@/constants/storage'
 import { EMPTY, NOTICE } from '../constants/state'
 import { USER, ASSISTANT } from '@/constants/chat'
@@ -12,6 +12,8 @@ const isMessage = (value: unknown): value is Message =>
   (value.role === USER || value.role === ASSISTANT) &&
   'content' in value &&
   typeof value.content === 'string'
+const isEntry = (value: unknown): value is Entry =>
+  isMessage(value) && 'id' in value && typeof value.id === 'number'
 const isTranscript = (value: unknown): value is Transcript =>
   typeof value === 'object' &&
   value !== null &&
@@ -19,7 +21,7 @@ const isTranscript = (value: unknown): value is Transcript =>
   typeof value.isOpen === 'boolean' &&
   'messages' in value &&
   Array.isArray(value.messages) &&
-  value.messages.every((message: unknown) => isMessage(message))
+  value.messages.every((message: unknown) => isEntry(message))
 const load = (): Transcript => {
   try {
     const stored = sessionStorage.getItem(TUTOR)
@@ -35,39 +37,52 @@ const save = (transcript: Transcript): void => {
     sessionStorage.setItem(TUTOR, JSON.stringify(transcript))
   } catch {}
 }
-const append = (messages: Message[], text: string): Message[] =>
+const listeners = new Set<() => void>()
+let cache: Transcript | null = null
+const read = (): Transcript => {
+  cache ??= load()
+  return cache
+}
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+const update = (change: (current: Transcript) => Transcript): void => {
+  cache = change(read())
+  save(cache)
+  for (const listener of listeners) listener()
+}
+const append = (messages: Entry[], text: string): Entry[] =>
   messages.map((message, index) =>
     index === messages.length - 1 ? { ...message, content: message.content + text } : message
   )
-export const useTutor = () => {
-  const [transcript, setTranscript] = useState<Transcript>(EMPTY)
-  const [isLoaded, setLoaded] = useState(false)
+const toggle = (): void => {
+  update(current => ({ ...current, isOpen: !current.isOpen }))
+}
+export const useTutor = (): Conversation => {
+  const transcript = useSyncExternalStore(subscribe, read, () => EMPTY)
   const [notice, setNotice] = useState<string | null>(null)
   const [isBusy, setBusy] = useState(false)
-  useEffect(() => {
-    setTranscript(load())
-    setLoaded(true)
-  }, [])
-  useEffect(() => {
-    if (isLoaded) save(transcript)
-  }, [isLoaded, transcript])
-  const toggle = (): void => {
-    setTranscript(current => ({ ...current, isOpen: !current.isOpen }))
-  }
   const send = async (question: string): Promise<void> => {
-    const history: Message[] = [...transcript.messages, { role: USER, content: question }]
-    setTranscript(current => ({
+    const id = (transcript.messages.at(-1)?.id ?? 0) + 1
+    const history: Entry[] = [...transcript.messages, { id, role: USER, content: question }]
+    update(current => ({
       ...current,
-      messages: [...history, { role: ASSISTANT, content: '' }]
+      messages: [...history, { id: id + 1, role: ASSISTANT, content: '' }]
     }))
     setNotice(null)
     setBusy(true)
-    const status = await ask(history, text => {
-      setTranscript(current => ({ ...current, messages: append(current.messages, text) }))
-    }).catch(() => 0)
+    const status = await ask(
+      history.map(({ role, content }) => ({ role, content })),
+      text => {
+        update(current => ({ ...current, messages: append(current.messages, text) }))
+      }
+    ).catch(() => 0)
     setBusy(false)
     if (status === 200) return
-    setTranscript(current => ({ ...current, messages: transcript.messages }))
+    update(current => ({ ...current, messages: transcript.messages }))
     setNotice(NOTICE[status] ?? 'Could not reach the tutor.')
   }
   return { transcript, notice, isBusy, send, toggle }
