@@ -499,14 +499,16 @@ describe('assassin supporting a marshal capture', () => {
     expect(capturesFrom(WHITE, occupancy, 'h8')).not.toContainEqual(['d8'])
     expect(capturesFrom(WHITE, occupancy, 'd4')).toContainEqual(['d8'])
   })
-  it('gives no support when the tile behind the target is occupied', () => {
-    const occupancy: SquareOccupant = {
+  it('gives no support when the tile behind the target is occupied by either side', () => {
+    const aiming: SquareOccupant = {
       d4: { side: WHITE, piece: MARSHAL },
       d8: { side: BLACK, piece: HERALD },
-      h8: { side: WHITE, piece: ASSASSIN },
-      c8: { side: WHITE, piece: LEGIONARY }
+      h8: { side: WHITE, piece: ASSASSIN }
     }
-    expect(capturesFrom(WHITE, occupancy, 'd4')).not.toContainEqual(['d8'])
+    const own: SquareOccupant = { ...aiming, c8: { side: WHITE, piece: LEGIONARY } }
+    const enemy: SquareOccupant = { ...aiming, c8: { side: BLACK, piece: LEGIONARY } }
+    expect(capturesFrom(WHITE, own, 'd4')).not.toContainEqual(['d8'])
+    expect(capturesFrom(WHITE, enemy, 'd4')).not.toContainEqual(['d8'])
   })
   it('supports a marshal capture while pinned', () => {
     const pinned: SquareOccupant = {

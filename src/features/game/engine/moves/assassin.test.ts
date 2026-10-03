@@ -113,6 +113,12 @@ describe('assassin blocked on its line', () => {
     expect(squares).toContain('g8')
     expect(squares).not.toContain('g10')
   })
+  it('never jumps its own piece to capture beyond it', () => {
+    const victim: SquareOccupant = { a6: { side: BLACK, piece: HERALD } }
+    const blocked: SquareOccupant = { ...victim, a4: { side: WHITE, piece: MAGE } }
+    expect(kills(assassin(WHITE, victim, 'a1', true))).toEqual([take('a1', 'a6', 'a7')])
+    expect(kills(assassin(WHITE, blocked, 'a1', true))).toEqual([])
+  })
   it('cannot capture a dormant emperor, which still blocks the line, but captures an awake one', () => {
     const dormant: SquareOccupant = { g9: { side: BLACK, piece: EMPEROR } }
     const awake: SquareOccupant = { g9: { side: BLACK, piece: EMPEROR, awake: true } }

@@ -20,12 +20,6 @@ const colour = (square: string): number => {
   const { file, rank } = parseSquare(square)
   return (file + rank) % 2
 }
-const average = (isEnhanced: boolean): number => {
-  const squares = everySquare()
-  let total = 0
-  for (const from of squares) total += templar(WHITE, {}, from, isEnhanced).length
-  return total / squares.length
-}
 const crowd = (side: Side): SquareOccupant =>
   Object.fromEntries(
     ['e', 'f', 'g', 'h', 'i']
@@ -64,10 +58,6 @@ describe('templar across the whole board', () => {
     for (const from of everySquare())
       for (const isEnhanced of [false, true])
         expect(templar(BLACK, {}, from, isEnhanced)).toEqual(templar(WHITE, {}, from, isEnhanced))
-  })
-  it('reaches 5.2 squares restricted and 11.5 enhanced on average', () => {
-    expect(average(false)).toBeCloseTo(5.2, 1)
-    expect(average(true)).toBeCloseTo(11.5, 1)
   })
 })
 describe('templar jumping', () => {

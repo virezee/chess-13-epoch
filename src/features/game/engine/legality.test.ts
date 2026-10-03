@@ -915,6 +915,55 @@ describe('sentinel, the command zone and the enemy emperor', () => {
     expect(destinations(BLACK, shielded, 'f4')).toContain('f3')
   })
 })
+describe('assassin under a pin', () => {
+  it('captures along its pin line, never off it', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      c3: { side: WHITE, piece: ASSASSIN },
+      f6: { side: BLACK, piece: HERALD },
+      c6: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(new Set(destinations(WHITE, occupancy, 'c3'))).toEqual(new Set(['b2', 'd4', 'e5', 'g7']))
+  })
+  it('slides along a file or a rank pin and takes the piece pinning it by landing behind it', () => {
+    const file: SquareOccupant = {
+      e1: { side: WHITE, piece: POPE },
+      e4: { side: WHITE, piece: ASSASSIN },
+      e7: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const rank: SquareOccupant = {
+      a5: { side: WHITE, piece: POPE },
+      d5: { side: WHITE, piece: ASSASSIN },
+      f5: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(new Set(destinations(WHITE, file, 'e4'))).toEqual(
+      new Set(['e2', 'e3', 'e5', 'e6', 'e8'])
+    )
+    expect(new Set(destinations(WHITE, rank, 'd5'))).toEqual(new Set(['b5', 'c5', 'e5', 'g5']))
+  })
+})
+describe('assassin in check', () => {
+  const checked: SquareOccupant = {
+    e4: { side: WHITE, piece: POPE },
+    k4: { side: BLACK, piece: SENTINEL },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('blocks a check by sliding into the line, or takes the checker by landing behind it', () => {
+    const blocking: SquareOccupant = { ...checked, h8: { side: WHITE, piece: ASSASSIN } }
+    const taking: SquareOccupant = { ...checked, m6: { side: WHITE, piece: ASSASSIN } }
+    expect(destinations(WHITE, blocking, 'h8')).toEqual(['h4'])
+    expect(destinations(WHITE, taking, 'm6')).toEqual(['j3'])
+  })
+  it('blocks from beyond 6 tiles only when enhanced', () => {
+    const restricted: SquareOccupant = { ...checked, h12: { side: WHITE, piece: ASSASSIN } }
+    const enhanced: SquareOccupant = { ...restricted, d12: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'h12')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'h12')).toEqual(['h4'])
+  })
+})
 describe('assassin capturing', () => {
   it('cannot land on a watched tile while enhanced either', () => {
     const occupancy: SquareOccupant = {
@@ -951,16 +1000,6 @@ describe('assassin capturing', () => {
     const watched: SquareOccupant = { ...corner, g1: { side: WHITE, piece: SENTINEL } }
     expect(destinations(BLACK, corner, 'm7')).toContain('m1')
     expect(destinations(BLACK, watched, 'm7')).not.toContain('m1')
-  })
-  it('captures along its pin line, never off it', () => {
-    const occupancy: SquareOccupant = {
-      a1: { side: WHITE, piece: POPE },
-      c3: { side: WHITE, piece: ASSASSIN },
-      f6: { side: BLACK, piece: HERALD },
-      c6: { side: BLACK, piece: LEGIONARY },
-      m13: { side: BLACK, piece: POPE }
-    }
-    expect(new Set(destinations(WHITE, occupancy, 'c3'))).toEqual(new Set(['b2', 'd4', 'e5', 'g7']))
   })
 })
 describe('assassin and the marshal riposte from the rules', () => {
@@ -1041,6 +1080,26 @@ describe('assassin check judged on the board after the capture', () => {
       g7: { side: BLACK, piece: POPE }
     }
     expect(setup(BLACK, occupancy).checkers).toEqual([])
+  })
+})
+describe('assassin giving a discovered check', () => {
+  const line: SquareOccupant = {
+    a1: { side: WHITE, piece: POPE },
+    g1: { side: WHITE, piece: SENTINEL },
+    g7: { side: BLACK, piece: POPE },
+    g8: { side: BLACK, piece: LEGIONARY }
+  }
+  it('gives a discovered check by sliding off a line', () => {
+    const occupancy: SquareOccupant = { ...line, g4: { side: WHITE, piece: ASSASSIN } }
+    expect(checkersAfter(occupancy, { from: 'g4', to: 'h4' })).toEqual(['g1'])
+  })
+  it('gives a discovered check by taking a piece in the line and landing off it', () => {
+    const occupancy: SquareOccupant = {
+      ...line,
+      g4: { side: BLACK, piece: LEGIONARY },
+      e4: { side: WHITE, piece: ASSASSIN }
+    }
+    expect(checkersAfter(occupancy, { from: 'e4', to: 'h4', captures: ['g4'] })).toEqual(['g1'])
   })
 })
 describe('assassin check answered', () => {

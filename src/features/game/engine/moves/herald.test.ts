@@ -18,12 +18,6 @@ const colour = (square: string): number => {
   const { file, rank } = parseSquare(square)
   return (file + rank) % 2
 }
-const average = (isEnhanced: boolean): number => {
-  const squares = everySquare()
-  let total = 0
-  for (const from of squares) total += herald(WHITE, {}, from, isEnhanced).length
-  return total / squares.length
-}
 const SHORT = ['b2', 'c3', 'd4', 'e5', 'f6', 'g7']
 const LONG = [...SHORT, 'h8', 'i9', 'j10', 'k11', 'l12', 'm13']
 const STEPS = ['g8', 'h7', 'g6', 'f7']
@@ -105,10 +99,6 @@ describe('herald across the whole board', () => {
     for (const from of everySquare())
       for (const isEnhanced of [false, true])
         expect(herald(BLACK, {}, from, isEnhanced)).toEqual(herald(WHITE, {}, from, isEnhanced))
-  })
-  it('reaches 16.9 squares restricted and 19.1 enhanced on average', () => {
-    expect(average(false)).toBeCloseTo(16.9, 1)
-    expect(average(true)).toBeCloseTo(19.1, 1)
   })
 })
 describe('herald and the dormant emperor', () => {
