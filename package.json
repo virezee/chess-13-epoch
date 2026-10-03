@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "worker": "wrangler dev --cwd worker",
+    "worker": "wrangler dev --cwd worker/",
     "dev": "next dev",
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "vitest",
     "build": "next build",
-    "deploy:worker": "wrangler deploy --cwd worker",
+    "deploy:worker": "wrangler deploy --cwd worker/",
     "start": "next start"
   },
   "dependencies": {

@@ -8,15 +8,16 @@ const ORIGINS = new Set([
   PRODUCTION,
   'https://chess-13-epoch-git-feature-online-play-virezee.vercel.app'
 ])
-const cors = (req: Request): Record<string, string> => {
+const site = (req: Request): string => {
   const origin = req.headers.get('origin') ?? ''
-  return {
-    'access-control-allow-origin': ORIGINS.has(origin) ? origin : PRODUCTION,
-    'access-control-allow-methods': 'POST',
-    'access-control-allow-headers': 'content-type',
-    vary: 'origin'
-  }
+  return ORIGINS.has(origin) ? origin : PRODUCTION
 }
+const cors = (req: Request): Record<string, string> => ({
+  'access-control-allow-origin': site(req),
+  'access-control-allow-methods': 'POST',
+  'access-control-allow-headers': 'content-type',
+  vary: 'origin'
+})
 const withCors = async (req: Request, res: Promise<Response>): Promise<Response> => {
   const response = await res
   for (const [name, value] of Object.entries(cors(req))) response.headers.set(name, value)
@@ -99,7 +100,7 @@ export default {
     const url = new URL(req.url)
     if (url.pathname === '/tutor') {
       if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req) })
-      return withCors(req, tutor(req, env))
+      return withCors(req, tutor(req, env, site(req)))
     }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response(null, { status: 426 })
     if (url.pathname === '/create') return claim(req, env, 10)
