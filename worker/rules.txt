@@ -352,7 +352,7 @@ A position is identified as in chess: piece placement, side to move, castling ri
 
 ### Insufficient material
 
-Read narrowly for now. The game is drawn on insufficient material only when the two Popes are the last pieces on the board. Every other thin position is played out, because which material cannot force mate here has not been settled yet.
+For now the game is drawn on insufficient material only when the two Popes are the last pieces on the board, and every other thin position is played out. Working out which other material cannot force mate is a large job, and it will be taken on once the game has an audience that justifies it.
 
 ### No-progress rule
 
