@@ -56,16 +56,7 @@ Requires [Bun](https://bun.com).
 bun i
 bun worker                           # ws://localhost:8787
 bun dev                              # http://localhost:3000
-bun lint
-bun format
-bun format:check
-bun run test
-bun run build
-bun deploy:worker                    # online rooms, to Cloudflare
-bun start
 ```
-
-Built with Next.js 16, React 19, Tailwind CSS 4 and TypeScript. The game logic has no runtime dependencies. Online play runs on a Cloudflare Worker with one Durable Object per room. The room keeps the game, so a reload picks up where it left off, and a player who drops out has one minute to come back before the game is lost.
 
 The rules page draws its diagrams by calling the real move generator, so the documentation cannot drift from the engine's behaviour.
 
@@ -73,7 +64,7 @@ The rules page draws its diagrams by calling the real move generator, so the doc
 
 ## Status
 
-Playable online between two players. There is no AI opponent.
+Playable online between two players.
 
 Insufficient material is read narrowly for now. A game is drawn on it only when the two Popes are the last pieces on the board.
 

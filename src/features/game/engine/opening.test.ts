@@ -2,7 +2,16 @@ import type { PieceName, SquareOccupant } from '@/types/material'
 import { describe, it, expect } from 'vitest'
 import { FILES } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
-import { MARSHAL, ASSASSIN, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  EMPEROR,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { opening } from './opening'
 
 const placed = (name: PieceName): SquareOccupant =>
@@ -48,6 +57,8 @@ describe('opening placement', () => {
       m13: { side: BLACK, piece: SENTINEL }
     })
   })
+})
+describe('opening placement in the centre of the back rank', () => {
   it('puts the assassins on e1, i1, e13 and i13', () => {
     expect(placed(ASSASSIN)).toEqual({
       e1: { side: WHITE, piece: ASSASSIN },
@@ -60,6 +71,12 @@ describe('opening placement', () => {
     expect(placed(MARSHAL)).toEqual({
       h1: { side: WHITE, piece: MARSHAL },
       h13: { side: BLACK, piece: MARSHAL }
+    })
+  })
+  it('puts the emperors on f1 and f13, both dormant', () => {
+    expect(placed(EMPEROR)).toEqual({
+      f1: { side: WHITE, piece: EMPEROR, awake: false },
+      f13: { side: BLACK, piece: EMPEROR, awake: false }
     })
   })
 })

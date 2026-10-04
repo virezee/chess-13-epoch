@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
+  EMPEROR,
   MARSHAL,
   ASSASSIN,
   SENTINEL,
@@ -196,5 +197,23 @@ describe('marshal notation', () => {
     expect(write(WHITE, lone, { from: 'd4', to: 'd5' })).toBe('Md4-d5')
     expect(write(WHITE, lone, take, { riposte: true })).toBe('Md4xd8 rip.')
     expect(write(WHITE, supported, take, { riposte: true })).toBe('Md4xd8')
+  })
+})
+describe('emperor notation', () => {
+  it('writes E for either side, a dash for a move and an x for a capture', () => {
+    const black: SquareOccupant = { e5: { side: BLACK, piece: EMPEROR, awake: true } }
+    const capture: SquareOccupant = {
+      e5: { side: WHITE, piece: EMPEROR, awake: true },
+      e9: { side: BLACK, piece: HERALD }
+    }
+    expect(write(BLACK, black, { from: 'e5', to: 'h8' })).toBe('Ee5-h8')
+    expect(write(WHITE, capture, { from: 'e5', to: 'e9', captures: ['e9'] })).toBe('Ee5xe9')
+  })
+  it('never marks the command zone, even beside its own marshal', () => {
+    const enhanced: SquareOccupant = {
+      e5: { side: WHITE, piece: EMPEROR, awake: true },
+      e3: { side: WHITE, piece: MARSHAL }
+    }
+    expect(write(WHITE, enhanced, { from: 'e5', to: 'h8' })).toBe('Ee5-h8')
   })
 })

@@ -663,15 +663,38 @@ describe('assassin progress and slots', () => {
     expect(state.promotions[WHITE]).toEqual([{ file: 3, piece: [TEMPLAR] }])
   })
 })
-describe('marshal riposte and progress', () => {
+describe('marshal riposte', () => {
+  const lines: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: TEMPLAR },
+    g11: { side: BLACK, piece: MARSHAL }
+  }
+  const take: Move = { from: 'g11', to: 'd8', captures: ['d8'] }
+  it('arms the riposte by capturing on a clear line of the enemy marshal', () => {
+    expect(play(BLACK, lines, take).state.riposte).toBe(true)
+  })
+  it('does not arm it when the line is blocked', () => {
+    const blocked: SquareOccupant = { ...lines, d6: { side: WHITE, piece: LEGIONARY } }
+    expect(play(BLACK, blocked, take).state.riposte).toBe(false)
+  })
+  it('does not arm it by capturing off the lines', () => {
+    const off: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: TEMPLAR },
+      m5: { side: BLACK, piece: MARSHAL }
+    }
+    expect(play(BLACK, off, { from: 'm5', to: 'm1', captures: ['m1'] }).state.riposte).toBe(false)
+  })
   it('arms no riposte once the marshal itself is captured', () => {
     const occupancy: SquareOccupant = {
       d4: { side: WHITE, piece: MARSHAL },
       d8: { side: BLACK, piece: SENTINEL }
     }
-    const take: Move = { from: 'd8', to: 'd4', captures: ['d4'] }
-    expect(play(BLACK, occupancy, take).state.riposte).toBe(false)
+    const capture: Move = { from: 'd8', to: 'd4', captures: ['d4'] }
+    expect(play(BLACK, occupancy, capture).state.riposte).toBe(false)
   })
+})
+describe('marshal progress', () => {
   it('adds 1 to the no-progress counter with a quiet move', () => {
     const occupancy: SquareOccupant = { g7: { side: WHITE, piece: MARSHAL } }
     const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10' })
@@ -680,6 +703,44 @@ describe('marshal riposte and progress', () => {
   it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
     const occupancy: SquareOccupant = {
       g7: { side: WHITE, piece: MARSHAL },
+      g11: { side: BLACK, piece: TEMPLAR }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g11', captures: ['g11'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+})
+describe('emperor riposte', () => {
+  const lines: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: TEMPLAR },
+    g11: { side: BLACK, piece: EMPEROR, awake: true }
+  }
+  const take: Move = { from: 'g11', to: 'd8', captures: ['d8'] }
+  it('arms the riposte by capturing on a clear line of the enemy marshal', () => {
+    expect(play(BLACK, lines, take).state.riposte).toBe(true)
+  })
+  it('does not arm it when the line is blocked', () => {
+    const blocked: SquareOccupant = { ...lines, d6: { side: WHITE, piece: LEGIONARY } }
+    expect(play(BLACK, blocked, take).state.riposte).toBe(false)
+  })
+  it('does not arm it by capturing off the lines', () => {
+    const off: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      m1: { side: WHITE, piece: TEMPLAR },
+      m5: { side: BLACK, piece: EMPEROR, awake: true }
+    }
+    expect(play(BLACK, off, { from: 'm5', to: 'm1', captures: ['m1'] }).state.riposte).toBe(false)
+  })
+})
+describe('emperor progress', () => {
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: EMPEROR, awake: true } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: EMPEROR, awake: true },
       g11: { side: BLACK, piece: TEMPLAR }
     }
     const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g11', captures: ['g11'] })

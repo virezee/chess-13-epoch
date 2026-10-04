@@ -111,6 +111,33 @@ describe('emperor and the enemy marshal', () => {
     const occupancy: SquareOccupant = { ...sleeper, e7: { side: BLACK, piece: MARSHAL } }
     expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
   })
+  it('wakes once the enemy marshal captures its marshal', () => {
+    const occupancy: SquareOccupant = { ...sleeper, h5: { side: BLACK, piece: MARSHAL } }
+    const take: Move = { from: 'h5', to: 'h1', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+})
+describe('emperor once awake', () => {
+  it('stays awake for good, with its marshal alive and nothing attacking it', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      e1: { side: WHITE, piece: EMPEROR, awake: true }
+    }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('wakes at the start of its owner turn once its marshal is gone, with nothing attacking it', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      e1: { side: WHITE, piece: EMPEROR, awake: false },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
 })
 describe('command zone after a promotion', () => {
   it('comes back once a legionary promotes into a marshal', () => {
@@ -302,6 +329,38 @@ describe('emperor beside an assassin', () => {
   it('wakes once an assassin captures its marshal', () => {
     const occupancy: SquareOccupant = { ...sleeper, f1: { side: BLACK, piece: ASSASSIN } }
     const take: Move = { from: 'f1', to: 'i1', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+})
+describe('emperor woken by an emperor', () => {
+  it('wakes when an awake enemy emperor attacks it, and not under a dormant one', () => {
+    const awake: SquareOccupant = { ...sleeper, e7: { side: BLACK, piece: EMPEROR, awake: true } }
+    const dormant: SquareOccupant = {
+      ...sleeper,
+      e7: { side: BLACK, piece: EMPEROR, awake: false },
+      l13: { side: BLACK, piece: MARSHAL }
+    }
+    expect(emperorAfter(WHITE, awake)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+    expect(emperorAfter(WHITE, dormant)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('stays asleep during the opponent turn under an emperor', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      e7: { side: BLACK, piece: EMPEROR, awake: true }
+    }
+    expect(emperorAfter(BLACK, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('wakes once an emperor captures its marshal', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      h5: { side: BLACK, piece: EMPEROR, awake: true }
+    }
+    const take: Move = { from: 'h5', to: 'h1', captures: ['h1'] }
     const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
     expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
       side: WHITE,

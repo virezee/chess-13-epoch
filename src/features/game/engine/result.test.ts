@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
+  EMPEROR,
   MARSHAL,
   ASSASSIN,
   SENTINEL,
@@ -390,6 +391,68 @@ describe('marshal insufficient material and stalemate', () => {
     const occupancy: SquareOccupant = {
       a1: { side: WHITE, piece: POPE },
       b2: { side: WHITE, piece: MARSHAL },
+      c3: { side: BLACK, piece: HERALD },
+      b3: { side: BLACK, piece: LEGIONARY },
+      c2: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})
+describe('emperor delivering mate or repeating a position', () => {
+  it('mates on its own once awake', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      g13: { side: WHITE, piece: EMPEROR, awake: true },
+      a13: { side: BLACK, piece: POPE },
+      a12: { side: BLACK, piece: LEGIONARY },
+      b12: { side: BLACK, piece: LEGIONARY }
+    }
+    const next = position(BLACK, occupancy, still())
+    const moves = legality(next)
+    expect(moves).toEqual([])
+    expect(result(next, moves, opening().match)).toEqual({ winner: WHITE, reason: CHECKMATE })
+  })
+  it('loses for the side whose move brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b5: { side: WHITE, piece: EMPEROR, awake: true },
+      l9: { side: BLACK, piece: EMPEROR, awake: true },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'b5', to: 'b6' },
+      { from: 'l9', to: 'l8' },
+      { from: 'b6', to: 'b5' },
+      { from: 'l8', to: 'l9' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+  it('lets the game go on once an emperor is captured', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      d4: { side: WHITE, piece: EMPEROR, awake: true },
+      d8: { side: BLACK, piece: EMPEROR, awake: true },
+      l13: { side: BLACK, piece: POPE }
+    }
+    expect(replay(occupancy, [{ from: 'd4', to: 'd8', captures: ['d8'] }])).toBeNull()
+  })
+})
+describe('emperor insufficient material and stalemate', () => {
+  it('keeps the game going while an emperor is on the board, awake or dormant', () => {
+    const popes: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome({ ...popes, e4: { side: WHITE, piece: EMPEROR, awake: true } })).toBeNull()
+    expect(outcome({ ...popes, e4: { side: WHITE, piece: EMPEROR, awake: false } })).toBeNull()
+  })
+  it('counts a dormant emperor as having no move, so the stalemate stands', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b2: { side: WHITE, piece: MARSHAL },
+      f5: { side: WHITE, piece: EMPEROR, awake: false },
       c3: { side: BLACK, piece: HERALD },
       b3: { side: BLACK, piece: LEGIONARY },
       c2: { side: BLACK, piece: LEGIONARY },

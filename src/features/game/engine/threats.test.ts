@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
+  EMPEROR,
   MARSHAL,
   ASSASSIN,
   SENTINEL,
@@ -120,12 +121,17 @@ describe('pinned pieces watching an assassin landing', () => {
     const mage: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: MAGE } }
     const sentinel: SquareOccupant = { ...rank, b1: { side: WHITE, piece: SENTINEL } }
     const assassin: SquareOccupant = { ...diagonal, c3: { side: WHITE, piece: ASSASSIN } }
+    const emperor: SquareOccupant = {
+      ...diagonal,
+      c3: { side: WHITE, piece: EMPEROR, awake: true }
+    }
     expect(capturesFrom(BLACK, legionary, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, templar, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, herald, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, mage, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, sentinel, 'b8')).not.toContainEqual(['b5'])
     expect(capturesFrom(BLACK, assassin, 'b8')).not.toContainEqual(['b5'])
+    expect(capturesFrom(BLACK, emperor, 'b8')).not.toContainEqual(['b5'])
   })
 })
 describe('supporting a marshal capture', () => {
@@ -548,5 +554,68 @@ describe('marshal watching an assassin landing', () => {
     }
     expect(capturesFrom(BLACK, victim, 'h9')).toContainEqual(['f9'])
     expect(capturesFrom(WHITE, landed, 'e4')).not.toContainEqual(['e9'])
+  })
+})
+describe('emperor attacks', () => {
+  const awake: SquareOccupant = { g7: { side: WHITE, piece: EMPEROR, awake: true } }
+  const dormant: SquareOccupant = {
+    g7: { side: WHITE, piece: EMPEROR, awake: false },
+    h1: { side: WHITE, piece: MARSHAL }
+  }
+  it('attacks along any line at any distance once awake', () => {
+    expect(attackers(WHITE, awake, 'g12')).toEqual(['g7'])
+    expect(attackers(WHITE, awake, 'c3')).toEqual(['g7'])
+  })
+  it('attacks nothing while dormant, not even beside it', () => {
+    expect(attackers(WHITE, dormant, 'g12')).toEqual([])
+    expect(attackers(WHITE, dormant, 'g8')).toEqual([])
+  })
+  it('does not attack through a piece on its line', () => {
+    const blocked: SquareOccupant = { ...awake, g10: { side: BLACK, piece: HERALD } }
+    expect(attackers(WHITE, blocked, 'g12')).toEqual([])
+  })
+  it('keeps attacking while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: EMPEROR, awake: true },
+      f6: { side: BLACK, piece: HERALD }
+    }
+    expect(attackers(WHITE, pinned, 'c8')).toEqual(['c3'])
+  })
+})
+describe('emperor watching and supporting', () => {
+  const victim: SquareOccupant = {
+    e10: { side: BLACK, piece: ASSASSIN },
+    e7: { side: WHITE, piece: HERALD }
+  }
+  const target: SquareOccupant = {
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: BLACK, piece: HERALD }
+  }
+  it('watches an assassin landing from afar once awake, and not while dormant', () => {
+    const awake: SquareOccupant = { ...victim, a6: { side: WHITE, piece: EMPEROR, awake: true } }
+    const dormant: SquareOccupant = {
+      ...victim,
+      a6: { side: WHITE, piece: EMPEROR, awake: false }
+    }
+    expect(capturesFrom(BLACK, awake, 'e10')).not.toContainEqual(['e7'])
+    expect(capturesFrom(BLACK, dormant, 'e10')).toContainEqual(['e7'])
+  })
+  it('supports a marshal capture once awake, and not while dormant', () => {
+    const awake: SquareOccupant = { ...target, d12: { side: WHITE, piece: EMPEROR, awake: true } }
+    const dormant: SquareOccupant = {
+      ...target,
+      d12: { side: WHITE, piece: EMPEROR, awake: false }
+    }
+    expect(capturesFrom(WHITE, awake, 'd4')).toContainEqual(['d8'])
+    expect(capturesFrom(WHITE, dormant, 'd4')).not.toContainEqual(['d8'])
+  })
+  it('supports a marshal capture while pinned', () => {
+    const pinned: SquareOccupant = {
+      c3: { side: WHITE, piece: EMPEROR, awake: true },
+      f6: { side: BLACK, piece: HERALD },
+      e9: { side: WHITE, piece: MARSHAL },
+      c7: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['c7'])
   })
 })

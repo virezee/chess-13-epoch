@@ -39,6 +39,8 @@ Back rank layout: `S T H G A E P M A G H T S`
 | M      | Marshal   | 1                |
 | L      | Legionary | 13 (a full rank) |
 
+Each side starts with 26 pieces, 13 on the back rank and 13 Legionaries, so 52 stand on the board at the start.
+
 Each letter is the initial of its piece, with one exception. The Mage takes `G` because `M` belongs to the Marshal, following the same convention that gives the Knight `N` in chess. Every letter still comes from the name of its own piece. The pawn is called a Legionary, so no letter competes with the Pope's `P`.
 
 ## Core mechanic: the Marshal's command zone

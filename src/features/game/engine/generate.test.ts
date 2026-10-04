@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
+  EMPEROR,
   MARSHAL,
   ASSASSIN,
   SENTINEL,
@@ -62,6 +63,11 @@ const assassinFrom = (
   const board: SquareOccupant = { ...occupancy, [square]: { side: WHITE, piece: ASSASSIN } }
   const castling = { left: false, right: false }
   return destinations(generate(WHITE, ASSASSIN, board, marshal, square, castling, [], null))
+}
+const emperorFrom = (square: string, marshal: string | null): string[] => {
+  const occupancy: SquareOccupant = { [square]: { side: WHITE, piece: EMPEROR, awake: true } }
+  const castling = { left: false, right: false }
+  return destinations(generate(WHITE, EMPEROR, occupancy, marshal, square, castling, [], null))
 }
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
@@ -182,5 +188,12 @@ describe('command zone on the assassin', () => {
   it('judges the zone from the square the move starts on', () => {
     expect(assassinFrom('e5', 'a1')).toContain('e13')
     expect(assassinFrom('f6', 'a1')).not.toContain('f13')
+  })
+})
+describe('command zone on the emperor', () => {
+  it('moves the same inside the zone, outside it, or with no marshal at all', () => {
+    expect(emperorFrom('g7', 'g8')).toHaveLength(48)
+    expect(emperorFrom('g7', 'a13')).toHaveLength(48)
+    expect(emperorFrom('g7', null)).toHaveLength(48)
   })
 })

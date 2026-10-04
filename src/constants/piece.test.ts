@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { MARSHAL, ASSASSIN, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY, VALUE } from './piece'
+import {
+  EMPEROR,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY,
+  VALUE
+} from './piece'
 
 describe('piece values', () => {
   it('prices the legionary at 2, enhanced or restricted', () => {
@@ -22,5 +32,8 @@ describe('piece values', () => {
   })
   it('prices the marshal at 13, enhanced or restricted', () => {
     expect(VALUE[MARSHAL]).toEqual({ enhanced: 13, restricted: 13 })
+  })
+  it('prices the emperor at 15, enhanced or restricted', () => {
+    expect(VALUE[EMPEROR]).toEqual({ enhanced: 15, restricted: 15 })
   })
 })
