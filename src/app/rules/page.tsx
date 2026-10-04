@@ -1,3 +1,4 @@
+// oxlint-disable import/max-dependencies
 import type { Metadata } from 'next'
 import { Intro } from '@/features/rules/components/Intro'
 import { Notice } from '@/features/rules/components/Notice'
@@ -8,6 +9,7 @@ import { Promotion } from '@/features/rules/components/Promotion'
 import { PieceValues } from '@/features/rules/components/PieceValues'
 import { Result } from '@/features/rules/components/Result'
 import { SwapRule } from '@/features/rules/components/SwapRule'
+import { Faq } from '@/features/rules/components/Faq'
 
 const DESCRIPTION =
   'Full rules for Chess 13: Epoch. The command zone, all nine pieces, promotion, the swap rule, and how games end.'
@@ -53,6 +55,7 @@ export default function Rules() {
       <PieceValues />
       <Result />
       <SwapRule />
+      <Faq />
     </main>
   )
 }

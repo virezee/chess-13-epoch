@@ -45,6 +45,15 @@ const replay = (occupancy: SquareOccupant, moves: Move[]): Result | null => {
   for (const move of moves) played = turn(played.save, move)
   return played.result
 }
+const brink = (occupancy: SquareOccupant, move: Move): Result | null => {
+  const state = { ...still(), noProgress: { count: 119, limit: 120 } }
+  return turn({ side: WHITE, occupancy, state, match: opening().match }, move).result
+}
+const ended = (changes: Partial<Match>): Result | null => {
+  const { occupancy, state, match } = opening()
+  const next = position(WHITE, occupancy, state)
+  return result(next, legality(next), { ...match, ...changes })
+}
 describe('legionary en passant in repetition', () => {
   const occupancy: SquareOccupant = {
     a1: { side: WHITE, piece: POPE },
@@ -505,10 +514,6 @@ describe('no-progress draw', () => {
     a1: { side: WHITE, piece: POPE },
     m13: { side: BLACK, piece: POPE }
   }
-  const brink = (occupancy: SquareOccupant, move: Move): Result | null => {
-    const state = { ...still(), noProgress: { count: 119, limit: 120 } }
-    return turn({ side: WHITE, occupancy, state, match: opening().match }, move).result
-  }
   it('draws when a quiet move brings the counter to its limit', () => {
     const occupancy: SquareOccupant = { ...popes, g7: { side: WHITE, piece: TEMPLAR } }
     const quiet: Move = { from: 'g7', to: 'i10' }
@@ -526,11 +531,6 @@ describe('no-progress draw', () => {
   })
 })
 describe('resignation, abandonment and agreement', () => {
-  const ended = (changes: Partial<Match>): Result | null => {
-    const { occupancy, state, match } = opening()
-    const next = position(WHITE, occupancy, state)
-    return result(next, legality(next), { ...match, ...changes })
-  }
   it('gives the win to the other side when a player resigns', () => {
     expect(ended({ resigned: WHITE })).toEqual({ winner: BLACK, reason: RESIGNATION })
     expect(ended({ resigned: BLACK })).toEqual({ winner: WHITE, reason: RESIGNATION })
