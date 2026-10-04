@@ -78,25 +78,29 @@ export const useRoom = (
   const [offer, setOffer] = useState<OfferState | null>(null)
   const [rejected, setRejected] = useState(false)
   useEffect(() => {
-    const room =
-      path === undefined
-        ? null
-        : connect(
-            path,
-            listen(currentRole, {
-              link: setLink,
-              role: setRole,
-              save: setSave,
-              offer: setOffer,
-              promotions: setPromotions,
-              key: setKey,
-              players: setPlayers,
-              seconds: setSeconds,
-              rejected: setRejected
-            })
-          )
-    connection.current = room
+    let room: Connection | null = null
+    const timer = setTimeout(() => {
+      room =
+        path === undefined
+          ? null
+          : connect(
+              path,
+              listen(currentRole, {
+                link: setLink,
+                role: setRole,
+                save: setSave,
+                offer: setOffer,
+                promotions: setPromotions,
+                key: setKey,
+                players: setPlayers,
+                seconds: setSeconds,
+                rejected: setRejected
+              })
+            )
+      connection.current = room
+    })
     return (): void => {
+      clearTimeout(timer)
       room?.leave()
     }
   }, [path, setSave, setPromotions, setKey, setSeconds])
