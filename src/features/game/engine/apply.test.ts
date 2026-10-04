@@ -47,6 +47,15 @@ const WINGS: SquareOccupant = {
   a13: { side: BLACK, piece: SENTINEL },
   m13: { side: BLACK, piece: SENTINEL }
 }
+const thinned = (pieces: number): SquareOccupant => {
+  const { occupancy } = opening()
+  const removable = Object.entries(occupancy)
+    .filter(([square, { piece }]) => piece !== POPE && square !== 'e3')
+    .map(([square]) => square)
+  const board = { ...occupancy }
+  for (const square of removable.slice(0, 52 - pieces)) delete board[square]
+  return board
+}
 describe('legionary en passant right', () => {
   it('opens behind a white burst from rank 3 to rank 7', () => {
     const occupancy: SquareOccupant = { e3: { side: WHITE, piece: LEGIONARY } }
@@ -791,15 +800,6 @@ describe('swap only on the first black turn', () => {
   })
 })
 describe('no-progress limit', () => {
-  const thinned = (pieces: number): SquareOccupant => {
-    const { occupancy } = opening()
-    const removable = Object.entries(occupancy)
-      .filter(([square, { piece }]) => piece !== POPE && square !== 'e3')
-      .map(([square]) => square)
-    const board = { ...occupancy }
-    for (const square of removable.slice(0, 52 - pieces)) delete board[square]
-    return board
-  }
   it.each([
     [52, 60],
     [40, 84],
