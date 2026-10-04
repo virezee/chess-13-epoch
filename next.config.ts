@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next'
 
-const config: NextConfig = {
+const nextConfig: NextConfig = {
   headers: () =>
     Promise.resolve([
       {
@@ -15,4 +15,4 @@ const config: NextConfig = {
       }
     ])
 }
-export default config
+export default nextConfig
