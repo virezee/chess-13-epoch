@@ -107,6 +107,12 @@ function Prompt({
   onDecline: () => void
   onAccept: () => void
 }) {
+  useEffect(() => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    return () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <p className='text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
@@ -195,11 +201,11 @@ function Outcome({
           </p>
           <p className='mt-1 text-[11px] capitalize text-ink-faint'>{result.reason}</p>
         </div>
-        {controls.offer === null && (
+        {controls.offer === null && controls.pending === null && (
           <div className='mt-2 flex'>
             <Action
               onClick={() => {
-                if (onHost === null) controls.onOffer(NEW)
+                if (onHost === null) controls.setPending(NEW)
                 else onHost()
               }}>
               New Game
@@ -207,7 +213,7 @@ function Outcome({
           </div>
         )}
       </div>
-      {controls.offer !== null && <Controls {...controls} />}
+      {(controls.offer !== null || controls.pending !== null) && <Controls {...controls} />}
     </>
   )
 }
@@ -225,9 +231,6 @@ export function GameStatus(
 ) {
   const { players, seconds, counters, canSwap, result, onHost, onDecline, onAccept, ...rest } =
     props
-  useEffect(() => {
-    window.scrollTo({ top: canSwap ? document.body.scrollHeight : 0, behavior: 'smooth' })
-  }, [canSwap])
   return (
     <section className='overflow-hidden rounded border border-line bg-surface'>
       <header className='px-3.5 py-3'>
