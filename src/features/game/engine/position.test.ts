@@ -111,6 +111,15 @@ describe('emperor and the enemy marshal', () => {
     const occupancy: SquareOccupant = { ...sleeper, e7: { side: BLACK, piece: MARSHAL } }
     expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
   })
+  it('is not woken by an enemy marshal whose only support is an assassin with a watched landing', () => {
+    const occupancy: SquareOccupant = {
+      ...sleeper,
+      e7: { side: BLACK, piece: MARSHAL },
+      a1: { side: BLACK, piece: ASSASSIN },
+      g2: { side: WHITE, piece: HERALD }
+    }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
   it('wakes once the enemy marshal captures its marshal', () => {
     const occupancy: SquareOccupant = { ...sleeper, h5: { side: BLACK, piece: MARSHAL } }
     const take: Move = { from: 'h5', to: 'h1', captures: ['h1'] }
@@ -170,6 +179,12 @@ describe('emperor woken by a herald', () => {
   it('wakes to the straight step only from an enhanced herald', () => {
     const restricted: SquareOccupant = { ...sleeper, e2: { side: BLACK, piece: HERALD } }
     const enhanced: SquareOccupant = { ...restricted, b4: { side: BLACK, piece: MARSHAL } }
+    expect(emperorAfter(WHITE, restricted)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+    expect(emperorAfter(WHITE, enhanced)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('wakes from beyond 6 tiles only under an enhanced herald', () => {
+    const restricted: SquareOccupant = { ...sleeper, l8: { side: BLACK, piece: HERALD } }
+    const enhanced: SquareOccupant = { ...restricted, l12: { side: BLACK, piece: MARSHAL } }
     expect(emperorAfter(WHITE, restricted)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
     expect(emperorAfter(WHITE, enhanced)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
   })
@@ -309,6 +324,18 @@ describe('emperor woken by an assassin', () => {
   it('stays asleep under an assassin aiming from above, whose landing would be off the board', () => {
     const occupancy: SquareOccupant = { ...sleeper, e6: { side: BLACK, piece: ASSASSIN } }
     expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('wakes from beyond 6 tiles only under an enhanced assassin', () => {
+    const restricted: SquareOccupant = {
+      a7: { side: WHITE, piece: POPE },
+      e1: { side: WHITE, piece: EMPEROR, awake: false },
+      b9: { side: WHITE, piece: MARSHAL },
+      k1: { side: BLACK, piece: ASSASSIN },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...restricted, k5: { side: BLACK, piece: MARSHAL } }
+    expect(emperorAfter(WHITE, restricted)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+    expect(emperorAfter(WHITE, enhanced)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
   })
 })
 describe('emperor beside an assassin', () => {

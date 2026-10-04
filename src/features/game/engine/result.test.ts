@@ -14,7 +14,13 @@ import {
   TEMPLAR,
   LEGIONARY
 } from '@/constants/piece'
-import { CHECKMATE, STALEMATE, REPETITION, INSUFFICIENT_MATERIAL } from '@/constants/outcome'
+import {
+  CHECKMATE,
+  STALEMATE,
+  REPETITION,
+  NO_PROGRESS,
+  INSUFFICIENT_MATERIAL
+} from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
 import { opening } from './opening'
@@ -459,5 +465,30 @@ describe('emperor insufficient material and stalemate', () => {
       m13: { side: BLACK, piece: POPE }
     }
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})
+describe('no-progress draw', () => {
+  const popes: SquareOccupant = {
+    a1: { side: WHITE, piece: POPE },
+    m13: { side: BLACK, piece: POPE }
+  }
+  const brink = (occupancy: SquareOccupant, move: Move): Result | null => {
+    const state = { ...still(), noProgress: { count: 119, limit: 120 } }
+    return turn({ side: WHITE, occupancy, state, match: opening().match }, move).result
+  }
+  it('draws when a quiet move brings the counter to its limit', () => {
+    const occupancy: SquareOccupant = { ...popes, g7: { side: WHITE, piece: TEMPLAR } }
+    const quiet: Move = { from: 'g7', to: 'i10' }
+    expect(brink(occupancy, quiet)).toEqual({ winner: null, reason: NO_PROGRESS })
+  })
+  it('plays on when the move at the limit is progress, a legionary move or a capture', () => {
+    const legionary: SquareOccupant = { ...popes, e3: { side: WHITE, piece: LEGIONARY } }
+    const capture: SquareOccupant = {
+      ...popes,
+      g7: { side: WHITE, piece: TEMPLAR },
+      i10: { side: BLACK, piece: HERALD }
+    }
+    expect(brink(legionary, { from: 'e3', to: 'e4' })).toBeNull()
+    expect(brink(capture, { from: 'g7', to: 'i10', captures: ['i10'] })).toBeNull()
   })
 })

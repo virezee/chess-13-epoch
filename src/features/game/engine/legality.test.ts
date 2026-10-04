@@ -125,6 +125,17 @@ describe('legionary in check', () => {
     }
     expect(destinations(WHITE, occupancy, 'f4')).toEqual(['f5'])
   })
+  it('blocks with the 2-tile step only when enhanced', () => {
+    const occupancy: SquareOccupant = {
+      c9: { side: WHITE, piece: POPE },
+      f7: { side: WHITE, piece: LEGIONARY },
+      i9: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...occupancy, b5: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, occupancy, 'f7')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'f7')).toEqual(['f9'])
+  })
 })
 describe('templar under a pin or in check', () => {
   it('cannot leap while pinned', () => {
@@ -169,6 +180,19 @@ describe('templar under a pin or in check', () => {
       m13: { side: BLACK, piece: POPE }
     }
     expect(destinations(WHITE, occupancy, 'f10')).toEqual(['h7'])
+  })
+})
+describe('templar in check while enhanced', () => {
+  it('blocks with the short leap only when enhanced', () => {
+    const restricted: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      h5: { side: WHITE, piece: TEMPLAR },
+      k4: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...restricted, l8: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'h5')).toEqual([])
+    expect(new Set(destinations(WHITE, enhanced, 'h5'))).toEqual(new Set(['f4', 'j4']))
   })
 })
 describe('templar giving check', () => {
@@ -233,6 +257,16 @@ describe('pope and attacked squares', () => {
     expect(destinations(WHITE, castle, 'g1', left)).toContain('d1')
     expect(destinations(WHITE, templar, 'g1', left)).not.toContain('d1')
     expect(destinations(WHITE, legionary, 'g1', left)).not.toContain('d1')
+  })
+  it('cannot step onto a square an enhanced templar attacks with the short leap', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      g6: { side: BLACK, piece: TEMPLAR },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...occupancy, k8: { side: BLACK, piece: MARSHAL } }
+    expect(destinations(WHITE, occupancy, 'e4')).toContain('e5')
+    expect(destinations(WHITE, enhanced, 'e4')).not.toContain('e5')
   })
 })
 describe('command zone and the enemy emperor', () => {
@@ -470,6 +504,37 @@ describe('herald in check', () => {
       m13: { side: BLACK, piece: POPE }
     }
     expect(destinations(WHITE, occupancy, 'f8')).toEqual([])
+  })
+})
+describe('herald beyond 6 tiles while enhanced', () => {
+  const checked: SquareOccupant = {
+    e4: { side: WHITE, piece: POPE },
+    k4: { side: BLACK, piece: SENTINEL },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('blocks a check from beyond 6 tiles only when enhanced', () => {
+    const restricted: SquareOccupant = { ...checked, b11: { side: WHITE, piece: HERALD } }
+    const enhanced: SquareOccupant = { ...restricted, b7: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'b11')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'b11')).toEqual(['i4'])
+  })
+  it('takes its checker with the straight step only when enhanced', () => {
+    const restricted: SquareOccupant = { ...checked, k5: { side: WHITE, piece: HERALD } }
+    const enhanced: SquareOccupant = { ...restricted, m8: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'k5')).toEqual(['j4'])
+    expect(new Set(destinations(WHITE, enhanced, 'k5'))).toEqual(new Set(['j4', 'k4']))
+  })
+  it('keeps the pope off a square it attacks from beyond 6 tiles only when enhanced', () => {
+    const occupancy: SquareOccupant = {
+      g8: { side: WHITE, piece: POPE },
+      a1: { side: BLACK, piece: HERALD },
+      a13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...occupancy, e2: { side: BLACK, piece: MARSHAL } }
+    const squares = destinations(WHITE, occupancy, 'g8')
+    expect(squares).not.toContain('g7')
+    expect(squares).toContain('h8')
+    expect(destinations(WHITE, enhanced, 'g8')).not.toContain('h8')
   })
 })
 describe('herald giving check', () => {
@@ -880,6 +945,35 @@ describe('sentinel in check', () => {
     expect(destinations(WHITE, occupancy, 'g10')).toEqual([])
   })
 })
+describe('sentinel beyond its restricted reach', () => {
+  const checked: SquareOccupant = {
+    e4: { side: WHITE, piece: POPE },
+    k4: { side: BLACK, piece: SENTINEL },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('blocks a check from 4 to 6 tiles only when enhanced', () => {
+    const restricted: SquareOccupant = { ...checked, h9: { side: WHITE, piece: SENTINEL } }
+    const enhanced: SquareOccupant = { ...restricted, l12: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'h9')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'h9')).toEqual(['h4'])
+  })
+  it('takes its checker from beyond 6 tiles only when enhanced', () => {
+    const restricted: SquareOccupant = { ...checked, k11: { side: WHITE, piece: SENTINEL } }
+    const enhanced: SquareOccupant = { ...restricted, g11: { side: WHITE, piece: MARSHAL } }
+    expect(destinations(WHITE, restricted, 'k11')).toEqual([])
+    expect(destinations(WHITE, enhanced, 'k11')).toEqual(['k4'])
+  })
+  it('keeps the pope off a square it attacks from beyond 6 tiles only when enhanced', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      e12: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const enhanced: SquareOccupant = { ...occupancy, i12: { side: BLACK, piece: MARSHAL } }
+    expect(destinations(WHITE, occupancy, 'e4')).toContain('e5')
+    expect(destinations(WHITE, enhanced, 'e4')).not.toContain('e5')
+  })
+})
 describe('sentinel giving check', () => {
   const popes: SquareOccupant = {
     a1: { side: WHITE, piece: POPE },
@@ -963,6 +1057,72 @@ describe('pope and sentinel attacks', () => {
       m13: { side: BLACK, piece: POPE }
     }
     expect(destinations(WHITE, partner, 'g1', left)).not.toContain('d1')
+  })
+})
+describe('sentinel castling', () => {
+  const left: Partial<State> = {
+    castlingSide: {
+      [WHITE]: { left: true, right: false },
+      [BLACK]: { left: false, right: false }
+    }
+  }
+  it('cannot castle out of check', () => {
+    const castle: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const checked: SquareOccupant = { ...castle, g5: { side: BLACK, piece: SENTINEL } }
+    expect(destinations(WHITE, castle, 'g1', left)).toContain('d1')
+    expect(destinations(WHITE, checked, 'g1', left)).not.toContain('d1')
+  })
+  it('needs every square between the pope and the sentinel empty, b1 included', () => {
+    const blocked: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL },
+      b1: { side: WHITE, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(destinations(WHITE, blocked, 'g1', left)).not.toContain('d1')
+  })
+})
+describe('sentinel castling on the right and for black', () => {
+  it('castles from g1 to j1, never across an attacked square or past a piece', () => {
+    const right: Partial<State> = {
+      castlingSide: {
+        [WHITE]: { left: false, right: true },
+        [BLACK]: { left: false, right: false }
+      }
+    }
+    const castle: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      m1: { side: WHITE, piece: SENTINEL },
+      a13: { side: BLACK, piece: POPE }
+    }
+    const attacked: SquareOccupant = { ...castle, i7: { side: BLACK, piece: SENTINEL } }
+    const blocked: SquareOccupant = { ...castle, l1: { side: WHITE, piece: HERALD } }
+    expect(destinations(WHITE, castle, 'g1', right)).toContain('j1')
+    expect(destinations(WHITE, attacked, 'g1', right)).not.toContain('j1')
+    expect(destinations(WHITE, blocked, 'g1', right)).not.toContain('j1')
+  })
+  it('castles for black from g13 to d13 or j13, never across an attacked square', () => {
+    const both: Partial<State> = {
+      castlingSide: {
+        [WHITE]: { left: false, right: false },
+        [BLACK]: { left: true, right: true }
+      }
+    }
+    const castle: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      g13: { side: BLACK, piece: POPE },
+      a13: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: SENTINEL }
+    }
+    const attacked: SquareOccupant = { ...castle, e7: { side: WHITE, piece: SENTINEL } }
+    expect(destinations(BLACK, castle, 'g13', both)).toContain('d13')
+    expect(destinations(BLACK, castle, 'g13', both)).toContain('j13')
+    expect(destinations(BLACK, attacked, 'g13', both)).not.toContain('d13')
+    expect(destinations(BLACK, attacked, 'g13', both)).toContain('j13')
   })
 })
 describe('sentinel, the command zone and the enemy emperor', () => {
