@@ -1,6 +1,7 @@
 import type { SquareOccupant } from '@/types/material'
 import type { Move } from '@/types/game'
 import { describe, it, expect } from 'vitest'
+import { FILES, RANKS } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
@@ -16,6 +17,7 @@ import {
 import { isEnhanced, generate } from './generate'
 
 const destinations = (moves: Move[]): string[] => moves.map(({ to }) => to)
+const everySquare = (): string[] => FILES.flatMap(file => RANKS.map(rank => `${file}${rank}`))
 const templarFrom = (square: string, marshal: string | null): string[] => {
   const occupancy: SquareOccupant = { [square]: { side: WHITE, piece: TEMPLAR } }
   const castling = { left: false, right: false }
@@ -81,6 +83,9 @@ describe('command zone reach', () => {
   })
   it('restricts pieces 5 or more tiles away', () => {
     for (const square of ['i4', 'd9', 'i9', 'm13']) expect(isEnhanced('d4', square)).toBe(false)
+  })
+  it('covers a 9 by 9 square of 81 squares when no edge cuts it off', () => {
+    expect(everySquare().filter(square => isEnhanced('e5', square))).toHaveLength(81)
   })
   it('enhances the whole army when the marshal stands on g7', () => {
     for (const square of ['a1', 'm1', 'a13', 'm13']) expect(isEnhanced('g7', square)).toBe(true)

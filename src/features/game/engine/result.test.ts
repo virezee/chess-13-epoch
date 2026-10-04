@@ -1,6 +1,6 @@
 // oxlint-disable import/max-dependencies, max-lines
 import type { SquareOccupant } from '@/types/material'
-import type { Move, State, Result } from '@/types/game'
+import type { Move, State, Match, Result } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
 import {
@@ -18,8 +18,11 @@ import {
   CHECKMATE,
   STALEMATE,
   REPETITION,
+  RESIGNATION,
+  ABANDONMENT,
   NO_PROGRESS,
-  INSUFFICIENT_MATERIAL
+  INSUFFICIENT_MATERIAL,
+  AGREEMENT
 } from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
@@ -484,6 +487,19 @@ describe('pope repeating a position', () => {
     expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
   })
 })
+describe('pope castling rights in repetition', () => {
+  it('counts a position with a castling right as a different position', () => {
+    const occupancy: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL },
+      m1: { side: WHITE, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(repetitionKey(WHITE, occupancy, opening().state)).not.toBe(
+      repetitionKey(WHITE, occupancy, still())
+    )
+  })
+})
 describe('no-progress draw', () => {
   const popes: SquareOccupant = {
     a1: { side: WHITE, piece: POPE },
@@ -507,5 +523,23 @@ describe('no-progress draw', () => {
     }
     expect(brink(legionary, { from: 'e3', to: 'e4' })).toBeNull()
     expect(brink(capture, { from: 'g7', to: 'i10', captures: ['i10'] })).toBeNull()
+  })
+})
+describe('resignation, abandonment and agreement', () => {
+  const ended = (changes: Partial<Match>): Result | null => {
+    const { occupancy, state, match } = opening()
+    const next = position(WHITE, occupancy, state)
+    return result(next, legality(next), { ...match, ...changes })
+  }
+  it('gives the win to the other side when a player resigns', () => {
+    expect(ended({ resigned: WHITE })).toEqual({ winner: BLACK, reason: RESIGNATION })
+    expect(ended({ resigned: BLACK })).toEqual({ winner: WHITE, reason: RESIGNATION })
+  })
+  it('gives the win to the side that stayed when a player leaves and does not return', () => {
+    expect(ended({ abandoned: WHITE })).toEqual({ winner: BLACK, reason: ABANDONMENT })
+    expect(ended({ abandoned: BLACK })).toEqual({ winner: WHITE, reason: ABANDONMENT })
+  })
+  it('draws when one player offers a draw and the other accepts', () => {
+    expect(ended({ agreed: true })).toEqual({ winner: null, reason: AGREEMENT })
   })
 })

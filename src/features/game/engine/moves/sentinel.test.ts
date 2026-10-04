@@ -90,6 +90,12 @@ describe('sentinel passing through its own pieces', () => {
       new Set(['e7', 'e8', 'e9', 'e10', 'e11', 'g5', 'h5', 'i5', 'j5', 'k5'])
     )
   })
+  it('passes them moving down or left when the marshal stands lower and to the left', () => {
+    const occupancy: SquareOccupant = { ...WALLED, b2: { side: WHITE, piece: MARSHAL } }
+    expect(landings(sentinel(WHITE, occupancy, 'e5', 'b2', true))).toEqual(
+      new Set(['e3', 'e2', 'e1', 'c5', 'b5', 'a5'])
+    )
+  })
   it('loses both vertical directions to a marshal on its rank, both horizontal to one on its file', () => {
     const rank: SquareOccupant = { ...WALLED, h5: { side: WHITE, piece: MARSHAL } }
     const file: SquareOccupant = { ...WALLED, e8: { side: WHITE, piece: MARSHAL } }

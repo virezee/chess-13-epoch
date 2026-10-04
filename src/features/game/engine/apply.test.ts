@@ -768,4 +768,47 @@ describe('pope progress', () => {
     const { state } = play(WHITE, occupancy, { from: 'a1', to: 'b2', captures: ['b2'] })
     expect(state.noProgress.count).toBe(0)
   })
+  it('adds 1 to the no-progress counter by castling', () => {
+    const occupancy: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL }
+    }
+    const castle: Move = { from: 'g1', to: 'd1', sentinel: { from: 'a1', to: 'e1' } }
+    expect(play(WHITE, occupancy, castle).state.noProgress.count).toBe(6)
+  })
+})
+describe('swap only on the first black turn', () => {
+  it('is not open on the white turn before the first move', () => {
+    const { side, occupancy, state, match } = opening()
+    expect(canSwap(position(side, occupancy, state), match)).toBe(false)
+  })
+  it('is gone on every black turn after the first', () => {
+    const first = follow(opening(), { from: 'e3', to: 'e4' })
+    const reply = follow(first, { from: 'e11', to: 'e10' })
+    const second = follow(reply, { from: 'f3', to: 'f4' })
+    const next = position(second.side, second.occupancy, second.state)
+    expect(canSwap(next, second.match)).toBe(false)
+  })
+})
+describe('no-progress limit', () => {
+  const thinned = (pieces: number): SquareOccupant => {
+    const { occupancy } = opening()
+    const removable = Object.entries(occupancy)
+      .filter(([square, { piece }]) => piece !== POPE && square !== 'e3')
+      .map(([square]) => square)
+    const board = { ...occupancy }
+    for (const square of removable.slice(0, 52 - pieces)) delete board[square]
+    return board
+  }
+  it.each([
+    [52, 60],
+    [40, 84],
+    [30, 104],
+    [20, 124],
+    [10, 144]
+  ])('reads 60 + 2 × (52 − pieces), so %i pieces give %i turns', (pieces, turns) => {
+    const start: Save = { ...opening(), occupancy: thinned(pieces) }
+    const { state } = follow(start, { from: 'e3', to: 'e4' })
+    expect(state.noProgress).toEqual({ count: 0, limit: turns * 2 })
+  })
 })
