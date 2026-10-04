@@ -18,7 +18,7 @@ function Inline({ text }: { text: string }) {
       token.startsWith('`') ? (
         <code
           key={match.index}
-          className='rounded-xs bg-surface-2 px-1 py-px font-mono text-[12px] text-ink'>
+          className='rounded-xs bg-surface-2 px-1 py-px font-sans text-[12px] text-ink'>
           {token.slice(1, -1)}
         </code>
       ) : (
@@ -45,7 +45,7 @@ function Content({ text }: { text: string }) {
       index % 2 === 1 ? (
         <pre
           key={at}
-          className='my-1 overflow-x-auto whitespace-pre rounded-[3px] border border-line bg-surface-2 p-2 font-mono text-[12px] leading-snug text-ink'>
+          className='my-1 overflow-x-auto whitespace-pre rounded-[3px] border border-line bg-surface-2 p-2 font-sans text-[12px] leading-snug text-ink'>
           {part.replace(/^\w*\n/u, '').replace(/\n$/u, '')}
         </pre>
       ) : (

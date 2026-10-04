@@ -3,7 +3,16 @@ import type { SquareOccupant } from '@/types/material'
 import type { Move, State, Result } from '@/types/game'
 import { describe, it, expect } from 'vitest'
 import { WHITE, BLACK } from '@/constants/player'
-import { POPE, ASSASSIN, SENTINEL, MAGE, HERALD, TEMPLAR, LEGIONARY } from '@/constants/piece'
+import {
+  POPE,
+  MARSHAL,
+  ASSASSIN,
+  SENTINEL,
+  MAGE,
+  HERALD,
+  TEMPLAR,
+  LEGIONARY
+} from '@/constants/piece'
 import { CHECKMATE, STALEMATE, REPETITION, INSUFFICIENT_MATERIAL } from '@/constants/outcome'
 import { legality } from './legality'
 import { position } from './position'
@@ -320,6 +329,70 @@ describe('assassin insufficient material and stalemate', () => {
       b3: { side: BLACK, piece: LEGIONARY },
       c2: { side: BLACK, piece: LEGIONARY },
       e5: { side: BLACK, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
+  })
+})
+describe('marshal riposte in repetition', () => {
+  it('counts a position with the riposte right as a different position', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      d3: { side: WHITE, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const { state } = opening()
+    const armed = { ...state, riposte: true }
+    expect(repetitionKey(WHITE, occupancy, armed)).not.toBe(repetitionKey(WHITE, occupancy, state))
+  })
+})
+describe('marshal delivering mate or repeating a position', () => {
+  it('mates on its own, since it needs no support against the pope', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      g13: { side: WHITE, piece: MARSHAL },
+      a13: { side: BLACK, piece: POPE },
+      a12: { side: BLACK, piece: LEGIONARY },
+      b12: { side: BLACK, piece: LEGIONARY }
+    }
+    const next = position(BLACK, occupancy, still())
+    const moves = legality(next)
+    expect(moves).toEqual([])
+    expect(result(next, moves, opening().match)).toEqual({ winner: WHITE, reason: CHECKMATE })
+  })
+  it('loses for the side whose move brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b5: { side: WHITE, piece: MARSHAL },
+      l9: { side: BLACK, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'b5', to: 'b6' },
+      { from: 'l9', to: 'l8' },
+      { from: 'b6', to: 'b5' },
+      { from: 'l8', to: 'l9' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+})
+describe('marshal insufficient material and stalemate', () => {
+  it('keeps the game going while a marshal is on the board', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      e4: { side: WHITE, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(outcome(occupancy)).toBeNull()
+  })
+  it('wins for the side whose pinned marshal cannot take the unsupported pinner', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      b2: { side: WHITE, piece: MARSHAL },
+      c3: { side: BLACK, piece: HERALD },
+      b3: { side: BLACK, piece: LEGIONARY },
+      c2: { side: BLACK, piece: LEGIONARY },
       m13: { side: BLACK, piece: POPE }
     }
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })

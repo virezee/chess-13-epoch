@@ -174,3 +174,27 @@ describe('assassin notation', () => {
     expect(write(WHITE, enhanced, take)).toBe('Ag7xm13^')
   })
 })
+describe('marshal notation', () => {
+  it('writes M for either side, a dash for a move and an x for a capture', () => {
+    const supported: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      c7: { side: WHITE, piece: LEGIONARY }
+    }
+    expect(write(BLACK, { d4: { side: BLACK, piece: MARSHAL } }, { from: 'd4', to: 'h8' })).toBe(
+      'Md4-h8'
+    )
+    expect(write(WHITE, supported, { from: 'd4', to: 'd8', captures: ['d8'] })).toBe('Md4xd8')
+  })
+  it('never marks the command zone, and marks a capture that only the riposte allows', () => {
+    const lone: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD }
+    }
+    const supported: SquareOccupant = { ...lone, c7: { side: WHITE, piece: LEGIONARY } }
+    const take: Move = { from: 'd4', to: 'd8', captures: ['d8'] }
+    expect(write(WHITE, lone, { from: 'd4', to: 'd5' })).toBe('Md4-d5')
+    expect(write(WHITE, lone, take, { riposte: true })).toBe('Md4xd8 rip.')
+    expect(write(WHITE, supported, take, { riposte: true })).toBe('Md4xd8')
+  })
+})

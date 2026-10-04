@@ -106,6 +106,12 @@ describe('emperor and the marshal', () => {
     })
   })
 })
+describe('emperor and the enemy marshal', () => {
+  it('is not woken by a lone enemy marshal, which could not take it without support', () => {
+    const occupancy: SquareOccupant = { ...sleeper, e7: { side: BLACK, piece: MARSHAL } }
+    expect(emperorAfter(WHITE, occupancy)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+})
 describe('command zone after a promotion', () => {
   it('comes back once a legionary promotes into a marshal', () => {
     const occupancy: SquareOccupant = {

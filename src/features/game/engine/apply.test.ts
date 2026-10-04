@@ -663,3 +663,26 @@ describe('assassin progress and slots', () => {
     expect(state.promotions[WHITE]).toEqual([{ file: 3, piece: [TEMPLAR] }])
   })
 })
+describe('marshal riposte and progress', () => {
+  it('arms no riposte once the marshal itself is captured', () => {
+    const occupancy: SquareOccupant = {
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: SENTINEL }
+    }
+    const take: Move = { from: 'd8', to: 'd4', captures: ['d4'] }
+    expect(play(BLACK, occupancy, take).state.riposte).toBe(false)
+  })
+  it('adds 1 to the no-progress counter with a quiet move', () => {
+    const occupancy: SquareOccupant = { g7: { side: WHITE, piece: MARSHAL } }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g10' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture and reads the limit again, 158 turns for three', () => {
+    const occupancy: SquareOccupant = {
+      g7: { side: WHITE, piece: MARSHAL },
+      g11: { side: BLACK, piece: TEMPLAR }
+    }
+    const { state } = play(WHITE, occupancy, { from: 'g7', to: 'g11', captures: ['g11'] })
+    expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
+  })
+})

@@ -520,3 +520,33 @@ describe('assassin supporting a marshal capture', () => {
     expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['c7'])
   })
 })
+describe('marshal attacks', () => {
+  const marshal: SquareOccupant = { m1: { side: WHITE, piece: MARSHAL } }
+  it('attacks the enemy pope along a line at any distance', () => {
+    expect(attackers(WHITE, marshal, 'm13')).toEqual(['m1'])
+  })
+  it('attacks no ordinary piece and no empty square, since it captures only with support', () => {
+    const victim: SquareOccupant = { ...marshal, m7: { side: BLACK, piece: HERALD } }
+    expect(attackers(WHITE, victim, 'm7')).toEqual([])
+    expect(attackers(WHITE, marshal, 'm5')).toEqual([])
+  })
+  it('does not attack the pope through a piece on its line', () => {
+    const blocked: SquareOccupant = { ...marshal, m7: { side: BLACK, piece: HERALD } }
+    expect(attackers(WHITE, blocked, 'm13')).toEqual([])
+  })
+})
+describe('marshal watching an assassin landing', () => {
+  it('never watches a landing on its own, since it could not take the assassin there', () => {
+    const victim: SquareOccupant = {
+      e4: { side: WHITE, piece: MARSHAL },
+      h9: { side: BLACK, piece: ASSASSIN },
+      f9: { side: WHITE, piece: HERALD }
+    }
+    const landed: SquareOccupant = {
+      e4: { side: WHITE, piece: MARSHAL },
+      e9: { side: BLACK, piece: ASSASSIN }
+    }
+    expect(capturesFrom(BLACK, victim, 'h9')).toContainEqual(['f9'])
+    expect(capturesFrom(WHITE, landed, 'e4')).not.toContainEqual(['e9'])
+  })
+})

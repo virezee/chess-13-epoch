@@ -1222,3 +1222,189 @@ describe('assassin taking an assassin', () => {
     expect(destinations(BLACK, unguarded, 'h7')).not.toContain('f7')
   })
 })
+describe('marshal under a pin', () => {
+  it('slides along a diagonal pin, and takes the piece pinning it only with support', () => {
+    const pinned: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      c3: { side: WHITE, piece: MARSHAL },
+      f6: { side: BLACK, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const supported: SquareOccupant = { ...pinned, i8: { side: WHITE, piece: TEMPLAR } }
+    expect(new Set(destinations(WHITE, pinned, 'c3'))).toEqual(new Set(['b2', 'd4', 'e5']))
+    expect(new Set(destinations(WHITE, supported, 'c3'))).toEqual(new Set(['b2', 'd4', 'e5', 'f6']))
+  })
+  it('slides along a file or a rank pin, and cannot take an unsupported piece pinning it', () => {
+    const file: SquareOccupant = {
+      e1: { side: WHITE, piece: POPE },
+      e4: { side: WHITE, piece: MARSHAL },
+      e7: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const rank: SquareOccupant = {
+      a5: { side: WHITE, piece: POPE },
+      d5: { side: WHITE, piece: MARSHAL },
+      f5: { side: BLACK, piece: SENTINEL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(new Set(destinations(WHITE, file, 'e4'))).toEqual(new Set(['e2', 'e3', 'e5', 'e6']))
+    expect(new Set(destinations(WHITE, rank, 'd5'))).toEqual(new Set(['b5', 'c5', 'e5']))
+  })
+})
+describe('marshal in check', () => {
+  const checked: SquareOccupant = {
+    e4: { side: WHITE, piece: POPE },
+    k4: { side: BLACK, piece: SENTINEL },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('blocks a check by sliding into the line, and takes the checker only with support', () => {
+    const occupancy: SquareOccupant = { ...checked, g8: { side: WHITE, piece: MARSHAL } }
+    const supported: SquareOccupant = { ...occupancy, j3: { side: WHITE, piece: LEGIONARY } }
+    expect(destinations(WHITE, occupancy, 'g8')).toEqual(['g4'])
+    expect(new Set(destinations(WHITE, supported, 'g8'))).toEqual(new Set(['g4', 'k4']))
+  })
+  it('has no move in a double check, even onto a supported checker', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      g10: { side: WHITE, piece: MARSHAL },
+      f6: { side: WHITE, piece: LEGIONARY },
+      g7: { side: BLACK, piece: TEMPLAR },
+      h7: { side: BLACK, piece: HERALD },
+      m13: { side: BLACK, piece: POPE }
+    }
+    expect(setup(WHITE, occupancy).checkers).toHaveLength(2)
+    expect(destinations(WHITE, occupancy, 'g10')).toEqual([])
+  })
+})
+describe('marshal giving check', () => {
+  const popes: SquareOccupant = {
+    a1: { side: WHITE, piece: POPE },
+    m13: { side: BLACK, piece: POPE }
+  }
+  it('checks along any line at any distance, with no support needed', () => {
+    const file: SquareOccupant = { ...popes, m1: { side: WHITE, piece: MARSHAL } }
+    const diagonal: SquareOccupant = { ...popes, b2: { side: WHITE, piece: MARSHAL } }
+    expect(setup(BLACK, file).checkers).toEqual(['m1'])
+    expect(setup(BLACK, diagonal).checkers).toEqual(['b2'])
+  })
+  it('gives no check through a piece on its line', () => {
+    const blocked: SquareOccupant = {
+      ...popes,
+      m1: { side: WHITE, piece: MARSHAL },
+      m7: { side: BLACK, piece: LEGIONARY }
+    }
+    expect(setup(BLACK, blocked).checkers).toEqual([])
+  })
+  it('checks while pinned, since a pin binds only its own moves', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      c3: { side: WHITE, piece: MARSHAL },
+      f6: { side: BLACK, piece: HERALD },
+      c13: { side: BLACK, piece: POPE }
+    }
+    expect(setup(BLACK, occupancy).checkers).toEqual(['c3'])
+  })
+})
+describe('pope and marshal attacks', () => {
+  it('cannot step onto any square on the lines of the enemy marshal, however far away', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      a5: { side: BLACK, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const squares = destinations(WHITE, occupancy, 'e4')
+    expect(squares).not.toContain('d5')
+    expect(squares).not.toContain('e5')
+    expect(squares).not.toContain('f5')
+    expect(squares).toContain('d4')
+  })
+  it('may not take a piece standing on the lines of the enemy marshal', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      d5: { side: BLACK, piece: TEMPLAR },
+      e5: { side: BLACK, piece: TEMPLAR },
+      e10: { side: BLACK, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const squares = destinations(WHITE, occupancy, 'e4')
+    expect(squares).toContain('d5')
+    expect(squares).not.toContain('e5')
+  })
+  it('cannot castle across a square on the lines of the enemy marshal', () => {
+    const castle: SquareOccupant = {
+      g1: { side: WHITE, piece: POPE },
+      a1: { side: WHITE, piece: SENTINEL },
+      e7: { side: BLACK, piece: MARSHAL },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const left: Partial<State> = {
+      castlingSide: {
+        [WHITE]: { left: true, right: false },
+        [BLACK]: { left: false, right: false }
+      }
+    }
+    expect(destinations(WHITE, castle, 'g1', left)).not.toContain('d1')
+  })
+})
+describe('marshal riposte', () => {
+  it('takes any enemy on its lines without support only while the riposte is armed', () => {
+    const lines: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      d4: { side: WHITE, piece: MARSHAL },
+      d8: { side: BLACK, piece: HERALD },
+      g4: { side: BLACK, piece: SENTINEL },
+      l13: { side: BLACK, piece: POPE }
+    }
+    const armed: Partial<State> = { riposte: true }
+    expect(destinations(WHITE, lines, 'd4')).not.toContain('d8')
+    expect(destinations(WHITE, lines, 'd4')).not.toContain('g4')
+    expect(destinations(WHITE, lines, 'd4', armed)).toContain('d8')
+    expect(destinations(WHITE, lines, 'd4', armed)).toContain('g4')
+  })
+})
+describe('marshal riposte in the worked example from the rules', () => {
+  const board: SquareOccupant = {
+    a1: { side: WHITE, piece: POPE },
+    d4: { side: WHITE, piece: MARSHAL },
+    d8: { side: WHITE, piece: LEGIONARY },
+    m1: { side: WHITE, piece: TEMPLAR },
+    g11: { side: BLACK, piece: HERALD },
+    j4: { side: BLACK, piece: HERALD },
+    g4: { side: BLACK, piece: SENTINEL },
+    l13: { side: BLACK, piece: POPE }
+  }
+  const { match } = opening()
+  const { state } = setup(BLACK, board)
+  const onD8: Move = { from: 'g11', to: 'd8', captures: ['d8'] }
+  const onM1: Move = { from: 'j4', to: 'm1', captures: ['m1'] }
+  const riposte: Move = { from: 'd4', to: 'g4', captures: ['g4'] }
+  it('lets the marshal take the herald on d8 or the sentinel on g4 after a capture on d8', () => {
+    const armed = turn({ side: BLACK, occupancy: board, state, match }, onD8)
+    expect(armed.moves).toContainEqual({ from: 'd4', to: 'd8', captures: ['d8'] })
+    expect(armed.moves).toContainEqual(riposte)
+  })
+  it('leaves the sentinel on g4 needing support after a capture on m1', () => {
+    const unarmed = turn({ side: BLACK, occupancy: board, state, match }, onM1)
+    expect(unarmed.moves).not.toContainEqual(riposte)
+  })
+  it('loses the right unless the marshal uses it on the very next move', () => {
+    const armed = turn({ side: BLACK, occupancy: board, state, match }, onD8)
+    const reply = turn(armed.save, { from: 'a1', to: 'a2' })
+    const waited = turn(reply.save, { from: 'l13', to: 'k13' })
+    expect(waited.moves).not.toContainEqual(riposte)
+  })
+})
+describe('marshal and the enemy emperor', () => {
+  it('forbids taking the enemy marshal when the emperor it wakes would attack its own pope', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: BLACK, piece: POPE },
+      c3: { side: WHITE, piece: EMPEROR, awake: false },
+      i9: { side: WHITE, piece: MARSHAL },
+      m13: { side: WHITE, piece: POPE },
+      i12: { side: BLACK, piece: SENTINEL }
+    }
+    const shielded: SquareOccupant = { ...occupancy, b2: { side: BLACK, piece: SENTINEL } }
+    expect(destinations(BLACK, occupancy, 'i12')).not.toContain('i9')
+    expect(destinations(BLACK, shielded, 'i12')).toContain('i9')
+  })
+})
