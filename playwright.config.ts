@@ -43,9 +43,18 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'on-first-retry'
   },
-  projects: [...DESKTOP, ...HANDHELD.flatMap(device => [device, `${device} landscape` as const])]
-    .map(device => ({ name: device, use: { ...devices[device] } }))
-    .filter(project => isCI || project.use.defaultBrowserType !== 'webkit'),
+  projects: [
+    ...DESKTOP.map(device => ({
+      name: device,
+      testIgnore: /mobile\.spec\.ts/u,
+      use: { ...devices[device] }
+    })),
+    ...HANDHELD.flatMap(device => [device, `${device} landscape` as const]).map(device => ({
+      name: device,
+      testMatch: /mobile\.spec\.ts/u,
+      use: { ...devices[device] }
+    }))
+  ].filter(project => isCI || project.use.defaultBrowserType !== 'webkit'),
   webServer: [
     {
       command: 'bun worker',

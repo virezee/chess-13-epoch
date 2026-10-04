@@ -30,9 +30,9 @@ function Outcomes() {
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
         Here most of those are gone. Stalemate is a win for the side that cannot move, and a third
         repetition loses for whoever plays it. Insufficient material counts only when the two Popes
-        stand alone, and the fifty-move rule becomes a no-progress limit that grows as pieces leave
-        the board. That leaves three draws only: insufficient material, the no-progress limit and
-        agreement.
+        stand alone (not final yet), and the fifty-move rule becomes a no-progress limit that grows
+        as pieces leave the board. That leaves three draws only: insufficient material, the
+        no-progress limit and agreement.
       </p>
     </>
   )

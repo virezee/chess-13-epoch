@@ -10,6 +10,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "vitest",
+    "test:e2e": "playwright test --workers=8",
     "build": "next build",
     "deploy:worker": "wrangler deploy --cwd worker/",
     "start": "next start"

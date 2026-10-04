@@ -77,7 +77,7 @@ export const boardProps = (game: ReturnType<typeof useGame>): BoardProps => {
   }
 }
 export const panelProps = (game: ReturnType<typeof useGame>): PanelProps => {
-  const { path, setPath, save, sync, room, position, setPromotions } = game
+  const { path, setPath, save, sync, room, position, setPromotions, mySide } = game
   const onOffer: PanelProps['onOffer'] = offer => {
     room.setOffer({ offer, outgoing: true })
     room.connection.current?.offer(offer)
@@ -103,7 +103,7 @@ export const panelProps = (game: ReturnType<typeof useGame>): PanelProps => {
         : null,
     onMove: game.playMove,
     onResign: () => {
-      takeResign(save, sync, setPromotions, position)
+      if (mySide !== null) takeResign(save, sync, setPromotions, mySide)
     },
     onOffer,
     onReply: game.reply

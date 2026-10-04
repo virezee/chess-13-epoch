@@ -6,7 +6,8 @@
     "src/constants/style.ts",
     "src/features/game/components/panel/GameStatus.tsx",
     "src/features/game/lib/annotation.ts",
-    "src/styles/globals.css"
+    "src/styles/globals.css",
+    "tests/**"
   ],
   "insertFinalNewline": false,
   "jsxSingleQuote": true,

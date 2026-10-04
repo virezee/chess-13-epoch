@@ -1,4 +1,5 @@
-import type { Move, Save, Position } from '@/types/game'
+import type { Side } from '@/types/material'
+import type { Move, Save } from '@/types/game'
 import { HOST, GUEST } from '@/constants/room'
 import { opening } from '@/features/game/engine/opening'
 
@@ -6,9 +7,9 @@ export const takeResign = (
   save: Save,
   sync: (save: Save) => void,
   setPromotions: (moves: Move[]) => void,
-  position: Position
+  side: Side
 ): void => {
-  sync({ ...save, match: { ...save.match, resigned: position.side } })
+  sync({ ...save, match: { ...save.match, resigned: side } })
   setPromotions([])
 }
 export const takeDraw = (
