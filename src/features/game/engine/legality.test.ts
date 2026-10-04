@@ -1125,6 +1125,52 @@ describe('sentinel castling on the right and for black', () => {
     expect(destinations(BLACK, attacked, 'g13', both)).toContain('j13')
   })
 })
+describe('pope castling past each attacked square', () => {
+  const both: Partial<State> = {
+    castlingSide: {
+      [WHITE]: { left: true, right: true },
+      [BLACK]: { left: false, right: false }
+    }
+  }
+  const castle: SquareOccupant = {
+    g1: { side: WHITE, piece: POPE },
+    a1: { side: WHITE, piece: SENTINEL },
+    m1: { side: WHITE, piece: SENTINEL },
+    a13: { side: BLACK, piece: POPE }
+  }
+  it('castles to either side while nothing attacks the squares it crosses or lands on', () => {
+    const squares = destinations(WHITE, castle, 'g1', both)
+    expect(squares).toContain('d1')
+    expect(squares).toContain('j1')
+  })
+  it('cannot castle left while f1 or d1 alone is attacked, and still castles right', () => {
+    for (const square of ['f7', 'd7']) {
+      const attacked: SquareOccupant = { ...castle, [square]: { side: BLACK, piece: SENTINEL } }
+      expect(destinations(WHITE, attacked, 'g1', both)).not.toContain('d1')
+      expect(destinations(WHITE, attacked, 'g1', both)).toContain('j1')
+    }
+  })
+  it('cannot castle right while h1 or j1 alone is attacked, and still castles left', () => {
+    for (const square of ['h7', 'j7']) {
+      const attacked: SquareOccupant = { ...castle, [square]: { side: BLACK, piece: SENTINEL } }
+      expect(destinations(WHITE, attacked, 'g1', both)).not.toContain('j1')
+      expect(destinations(WHITE, attacked, 'g1', both)).toContain('d1')
+    }
+  })
+})
+describe('pope beside the enemy pope', () => {
+  it('cannot step onto a square beside the enemy pope', () => {
+    const occupancy: SquareOccupant = {
+      e4: { side: WHITE, piece: POPE },
+      e6: { side: BLACK, piece: POPE }
+    }
+    const squares = destinations(WHITE, occupancy, 'e4')
+    expect(squares).not.toContain('d5')
+    expect(squares).not.toContain('e5')
+    expect(squares).not.toContain('f5')
+    expect(squares).toContain('d4')
+  })
+})
 describe('sentinel, the command zone and the enemy emperor', () => {
   it('keeps a sentinel near the enemy marshal to 3 tiles, never passing through toward it', () => {
     const occupancy: SquareOccupant = {

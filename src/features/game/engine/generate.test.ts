@@ -69,6 +69,11 @@ const emperorFrom = (square: string, marshal: string | null): string[] => {
   const castling = { left: false, right: false }
   return destinations(generate(WHITE, EMPEROR, occupancy, marshal, square, castling, [], null))
 }
+const popeFrom = (square: string, marshal: string | null): string[] => {
+  const occupancy: SquareOccupant = { [square]: { side: WHITE, piece: POPE } }
+  const castling = { left: false, right: false }
+  return destinations(generate(WHITE, POPE, occupancy, marshal, square, castling, [], null))
+}
 describe('command zone reach', () => {
   it('enhances pieces within 4 tiles of the marshal', () => {
     for (const square of ['h8', 'd8', 'h4', 'a1', 'd1', 'g7'])
@@ -195,5 +200,12 @@ describe('command zone on the emperor', () => {
     expect(emperorFrom('g7', 'g8')).toHaveLength(48)
     expect(emperorFrom('g7', 'a13')).toHaveLength(48)
     expect(emperorFrom('g7', null)).toHaveLength(48)
+  })
+})
+describe('command zone on the pope', () => {
+  it('moves the same inside the zone, outside it, or with no marshal at all', () => {
+    expect(popeFrom('g7', 'g8')).toHaveLength(8)
+    expect(popeFrom('g7', 'a13')).toHaveLength(8)
+    expect(popeFrom('g7', null)).toHaveLength(8)
   })
 })

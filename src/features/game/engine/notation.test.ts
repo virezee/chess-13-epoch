@@ -217,3 +217,33 @@ describe('emperor notation', () => {
     expect(write(WHITE, enhanced, { from: 'e5', to: 'h8' })).toBe('Ee5-h8')
   })
 })
+describe('pope notation', () => {
+  it('writes P for either side, a dash for a step and an x for a capture', () => {
+    const capture: SquareOccupant = { b2: { side: BLACK, piece: HERALD } }
+    expect(write(WHITE, {}, { from: 'a1', to: 'a2' })).toBe('Pa1-a2')
+    expect(write(BLACK, {}, { from: 'a13', to: 'b12' })).toBe('Pa13-b12')
+    expect(write(WHITE, capture, { from: 'a1', to: 'b2', captures: ['b2'] })).toBe('Pa1xb2')
+  })
+  it('never marks the command zone, even beside its own marshal', () => {
+    const beside: SquareOccupant = { b1: { side: WHITE, piece: MARSHAL } }
+    expect(write(WHITE, beside, { from: 'a1', to: 'a2' })).toBe('Pa1-a2')
+  })
+  it('writes castling as O-O-O on the left and O-O on the right, for either side', () => {
+    const white: SquareOccupant = {
+      a1: { side: WHITE, piece: SENTINEL },
+      g1: { side: WHITE, piece: POPE },
+      m1: { side: WHITE, piece: SENTINEL }
+    }
+    const black: SquareOccupant = {
+      a13: { side: BLACK, piece: SENTINEL },
+      g13: { side: BLACK, piece: POPE },
+      m13: { side: BLACK, piece: SENTINEL }
+    }
+    const left: Move = { from: 'g1', to: 'd1', sentinel: { from: 'a1', to: 'e1' } }
+    const right: Move = { from: 'g1', to: 'j1', sentinel: { from: 'm1', to: 'i1' } }
+    const blackLeft: Move = { from: 'g13', to: 'd13', sentinel: { from: 'a13', to: 'e13' } }
+    expect(write(WHITE, white, left)).toBe('O-O-O')
+    expect(write(WHITE, white, right)).toBe('O-O')
+    expect(write(BLACK, black, blackLeft)).toBe('O-O-O')
+  })
+})

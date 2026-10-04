@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { FILES } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
 import {
+  POPE,
   EMPEROR,
   MARSHAL,
   ASSASSIN,
@@ -77,6 +78,12 @@ describe('opening placement in the centre of the back rank', () => {
     expect(placed(EMPEROR)).toEqual({
       f1: { side: WHITE, piece: EMPEROR, awake: false },
       f13: { side: BLACK, piece: EMPEROR, awake: false }
+    })
+  })
+  it('puts the popes on g1 and g13', () => {
+    expect(placed(POPE)).toEqual({
+      g1: { side: WHITE, piece: POPE },
+      g13: { side: BLACK, piece: POPE }
     })
   })
 })

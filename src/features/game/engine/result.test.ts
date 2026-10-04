@@ -467,6 +467,23 @@ describe('emperor insufficient material and stalemate', () => {
     expect(outcome(occupancy)).toEqual({ winner: WHITE, reason: STALEMATE })
   })
 })
+describe('pope repeating a position', () => {
+  it('loses for the side whose step brings the position back a third time', () => {
+    const occupancy: SquareOccupant = {
+      a1: { side: WHITE, piece: POPE },
+      e3: { side: WHITE, piece: LEGIONARY },
+      m13: { side: BLACK, piece: POPE }
+    }
+    const round: Move[] = [
+      { from: 'a1', to: 'a2' },
+      { from: 'm13', to: 'm12' },
+      { from: 'a2', to: 'a1' },
+      { from: 'm12', to: 'm13' }
+    ]
+    expect(replay(occupancy, round)).toBeNull()
+    expect(replay(occupancy, [...round, ...round])).toEqual({ winner: WHITE, reason: REPETITION })
+  })
+})
 describe('no-progress draw', () => {
   const popes: SquareOccupant = {
     a1: { side: WHITE, piece: POPE },

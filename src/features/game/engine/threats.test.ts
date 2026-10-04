@@ -673,3 +673,34 @@ describe('emperor watching and supporting', () => {
     expect(capturesFrom(WHITE, pinned, 'e9')).toContainEqual(['c7'])
   })
 })
+describe('pope attacks, watching and supporting', () => {
+  it('attacks the tiles around it for either side, and nothing further', () => {
+    for (const square of ['a2', 'b1', 'b2']) expect(attackers(WHITE, {}, square)).toEqual(['a1'])
+    for (const square of ['a3', 'c1', 'c3']) expect(attackers(WHITE, {}, square)).toEqual([])
+    expect(attackers(BLACK, {}, 'l12')).toEqual(['m13'])
+  })
+  it('watches an assassin landing beside it', () => {
+    const beside: SquareOccupant = {
+      a7: { side: BLACK, piece: ASSASSIN },
+      a3: { side: WHITE, piece: HERALD }
+    }
+    const away: SquareOccupant = {
+      a8: { side: BLACK, piece: ASSASSIN },
+      a4: { side: WHITE, piece: HERALD }
+    }
+    expect(capturesFrom(BLACK, beside, 'a7')).not.toContainEqual(['a3'])
+    expect(capturesFrom(BLACK, away, 'a8')).toContainEqual(['a4'])
+  })
+  it('supports a marshal capture beside it', () => {
+    const beside: SquareOccupant = {
+      a7: { side: WHITE, piece: MARSHAL },
+      a2: { side: BLACK, piece: HERALD }
+    }
+    const away: SquareOccupant = {
+      a7: { side: WHITE, piece: MARSHAL },
+      a3: { side: BLACK, piece: HERALD }
+    }
+    expect(capturesFrom(WHITE, beside, 'a7')).toContainEqual(['a2'])
+    expect(capturesFrom(WHITE, away, 'a7')).not.toContainEqual(['a3'])
+  })
+})

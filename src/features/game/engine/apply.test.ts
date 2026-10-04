@@ -747,3 +747,25 @@ describe('emperor progress', () => {
     expect(state.noProgress).toEqual({ count: 0, limit: 158 * 2 })
   })
 })
+describe('pope and castling rights', () => {
+  it('loses both rights once it moves, for good even if it comes back', () => {
+    const start: Save = { ...opening(), occupancy: WINGS }
+    const moved = follow(start, { from: 'g1', to: 'g2' })
+    const reply = follow(moved, { from: 'g13', to: 'g12' })
+    const back = follow(reply, { from: 'g2', to: 'g1' })
+    expect(moved.state.castlingSide[WHITE]).toEqual({ left: false, right: false })
+    expect(reply.state.castlingSide[BLACK]).toEqual({ left: false, right: false })
+    expect(back.state.castlingSide[WHITE]).toEqual({ left: false, right: false })
+  })
+})
+describe('pope progress', () => {
+  it('adds 1 to the no-progress counter with a quiet step', () => {
+    const { state } = play(WHITE, {}, { from: 'a1', to: 'a2' })
+    expect(state.noProgress.count).toBe(6)
+  })
+  it('resets the no-progress counter with a capture', () => {
+    const occupancy: SquareOccupant = { b2: { side: BLACK, piece: HERALD } }
+    const { state } = play(WHITE, occupancy, { from: 'a1', to: 'b2', captures: ['b2'] })
+    expect(state.noProgress.count).toBe(0)
+  })
+})

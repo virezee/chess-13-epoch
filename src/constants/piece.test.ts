@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  POPE,
   EMPEROR,
   MARSHAL,
   ASSASSIN,
@@ -35,5 +36,8 @@ describe('piece values', () => {
   })
   it('prices the emperor at 15, enhanced or restricted', () => {
     expect(VALUE[EMPEROR]).toEqual({ enhanced: 15, restricted: 15 })
+  })
+  it('prices the pope at infinity, enhanced or restricted', () => {
+    expect(VALUE[POPE]).toEqual({ enhanced: Infinity, restricted: Infinity })
   })
 })

@@ -396,3 +396,32 @@ describe('emperor woken by an emperor', () => {
     })
   })
 })
+describe('emperor woken by a pope', () => {
+  const beside: SquareOccupant = {
+    m1: { side: WHITE, piece: POPE },
+    e1: { side: WHITE, piece: EMPEROR, awake: false },
+    h1: { side: WHITE, piece: MARSHAL },
+    d2: { side: BLACK, piece: POPE }
+  }
+  it('wakes when the enemy pope stands beside it', () => {
+    expect(emperorAfter(WHITE, beside)).toEqual({ side: WHITE, piece: EMPEROR, awake: true })
+  })
+  it('stays asleep during the opponent turn beside the enemy pope', () => {
+    expect(emperorAfter(BLACK, beside)).toEqual({ side: WHITE, piece: EMPEROR, awake: false })
+  })
+  it('wakes once the enemy pope captures its marshal', () => {
+    const occupancy: SquareOccupant = {
+      m1: { side: WHITE, piece: POPE },
+      e1: { side: WHITE, piece: EMPEROR, awake: false },
+      h1: { side: WHITE, piece: MARSHAL },
+      g2: { side: BLACK, piece: POPE }
+    }
+    const take: Move = { from: 'g2', to: 'h1', captures: ['h1'] }
+    const played = apply(position(BLACK, occupancy, opening().state), take, opening().match)
+    expect(emperorAfter(WHITE, played.occupancy, played.state)).toEqual({
+      side: WHITE,
+      piece: EMPEROR,
+      awake: true
+    })
+  })
+})
