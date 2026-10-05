@@ -1,3 +1,4 @@
+**/.env.local
 /node_modules/
 /.next/
 *.tsbuildinfo
@@ -5,4 +6,3 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /worker/.wrangler/
-**/.env.local

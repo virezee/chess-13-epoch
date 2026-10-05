@@ -16,7 +16,7 @@ function Files({ isFlipped }: { isFlipped: boolean }) {
       className='grid font-mono text-[10px] text-ink-faint'
       style={{ gridTemplateColumns: `repeat(13, ${SQUARE})` }}>
       {(isFlipped ? FILES.toReversed() : FILES).map(file => (
-        <span key={file} className='flex justify-center pt-2'>
+        <span key={file} className='flex justify-center pt-2.5 leading-none'>
           {file}
         </span>
       ))}

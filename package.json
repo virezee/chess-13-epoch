@@ -1,5 +1,5 @@
 {
-  "name": "chess-13",
+  "name": "chess-13-epoch",
   "version": "0.2.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "vitest",
-    "test:e2e": "playwright test --workers=8",
+    "test:e2e": "playwright test",
     "build": "next build",
     "deploy:worker": "wrangler deploy --cwd worker/",
     "start": "next start"
