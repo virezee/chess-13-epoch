@@ -2,8 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "chess-13-epoch-room",
   "main": "index.ts",
-  "compatibility_date": "2026-09-29",
+  "compatibility_date": "2026-10-05",
   "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
   "exports": { "Room": { "type": "durable-object", "storage": "sqlite" } },
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI", "remote": true }
 }

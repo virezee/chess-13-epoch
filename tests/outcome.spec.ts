@@ -37,8 +37,26 @@ const join = async (page: Page, context: BrowserContext): Promise<Page> => {
   await expect(page.getByText('Waiting For Opponent')).toBeHidden()
   return guest
 }
+const settle = (page: Page): Promise<void> =>
+  page.evaluate(
+    () =>
+      new Promise<void>(resolve => {
+        let last = window.scrollY
+        let still = 0
+        const tick = (): void => {
+          still = window.scrollY === last ? still + 1 : 0
+          last = window.scrollY
+          if (still >= 10) resolve()
+          else requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+  )
 const press = async (page: Page, name: string): Promise<void> => {
-  await page.getByRole('button', { name, exact: true }).click()
+  const button = page.getByRole('button', { name, exact: true })
+  await button.waitFor()
+  await settle(page)
+  await button.click()
 }
 const ENDINGS = [
   {

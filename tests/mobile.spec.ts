@@ -21,9 +21,30 @@ const join = async (page: Page, context: BrowserContext): Promise<Page> => {
   await expect(page.getByText('Waiting For Opponent')).toBeHidden()
   return guest
 }
+const settle = (page: Page): Promise<void> =>
+  page.evaluate(
+    () =>
+      new Promise<void>(resolve => {
+        let last = window.scrollY
+        let still = 0
+        const tick = (): void => {
+          still = window.scrollY === last ? still + 1 : 0
+          last = window.scrollY
+          if (still >= 10) resolve()
+          else requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+  )
+const press = async (page: Page, name: string): Promise<void> => {
+  const button = page.getByRole('button', { name, exact: true })
+  await button.waitFor()
+  await settle(page)
+  await button.click()
+}
 const resign = async (page: Page): Promise<void> => {
-  await page.getByRole('button', { name: 'Resign', exact: true }).click()
-  await page.getByRole('button', { name: '✓' }).click()
+  await press(page, 'Resign')
+  await press(page, '✓')
 }
 const atBottom = (page: Page): Promise<boolean> =>
   page.evaluate(
@@ -32,7 +53,7 @@ const atBottom = (page: Page): Promise<boolean> =>
 const scrolls = async (page: Page, label: string): Promise<void> => {
   await expect(page.getByText(label)).toBeVisible()
   await expect.poll(() => atBottom(page)).toBe(true)
-  await page.getByRole('button', { name: '✕' }).click()
+  await press(page, '✕')
   await expect(page.getByText(label)).toBeHidden()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 }
@@ -70,18 +91,18 @@ test.describe('prompt scroll during the game', () => {
   })
   test('Resign?', async ({ page, context }) => {
     await join(page, context)
-    await page.getByRole('button', { name: 'Resign', exact: true }).click()
+    await press(page, 'Resign')
     await scrolls(page, 'Resign?')
   })
   test('Offer A Draw?', async ({ page, context }) => {
     await join(page, context)
-    await page.getByRole('button', { name: 'Draw', exact: true }).click()
+    await press(page, 'Draw')
     await scrolls(page, 'Offer A Draw?')
   })
   test('Accept A Draw?', async ({ page, context }) => {
     const guest = await join(page, context)
-    await page.getByRole('button', { name: 'Draw', exact: true }).click()
-    await page.getByRole('button', { name: '✓' }).click()
+    await press(page, 'Draw')
+    await press(page, '✓')
     await scrolls(guest, 'Accept A Draw?')
   })
 })
@@ -90,14 +111,14 @@ test.describe('prompt scroll after the game', () => {
   test('Offer A New Game?', async ({ page, context }) => {
     await join(page, context)
     await resign(page)
-    await page.getByRole('button', { name: 'New Game' }).click()
+    await press(page, 'New Game')
     await scrolls(page, 'Offer A New Game?')
   })
   test('Accept A New Game?', async ({ page, context }) => {
     const guest = await join(page, context)
     await resign(page)
-    await page.getByRole('button', { name: 'New Game' }).click()
-    await page.getByRole('button', { name: '✓' }).click()
+    await press(page, 'New Game')
+    await press(page, '✓')
     await scrolls(guest, 'Accept A New Game?')
   })
 })

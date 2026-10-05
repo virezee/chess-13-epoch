@@ -46,6 +46,27 @@ const join = async (page: Page, context: BrowserContext): Promise<Page> => {
   await expect(page.getByText('Waiting For Opponent')).toBeHidden()
   return guest
 }
+const settle = (page: Page): Promise<void> =>
+  page.evaluate(
+    () =>
+      new Promise<void>(resolve => {
+        let last = window.scrollY
+        let still = 0
+        const tick = (): void => {
+          still = window.scrollY === last ? still + 1 : 0
+          last = window.scrollY
+          if (still >= 10) resolve()
+          else requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+  )
+const press = async (page: Page, name: string): Promise<void> => {
+  const button = page.getByRole('button', { name, exact: true })
+  await button.waitFor()
+  await settle(page)
+  await button.click()
+}
 test.describe('swap offer', () => {
   test('only black sees it, after the first white move', async ({ page, context }) => {
     const guest = await join(page, context)
@@ -58,7 +79,8 @@ test.describe('swap offer', () => {
   test('is gone on the second black turn', async ({ page, context }) => {
     const guest = await join(page, context)
     await move(page, 'e3', 'e4', false)
-    await guest.getByRole('button', { name: '✕' }).click()
+    await press(guest, '✕')
+    await expect.poll(() => guest.evaluate(() => window.scrollY)).toBe(0)
     await move(guest, 'e11', 'e10', true)
     await expect.poll(() => occupant(page, 'e10', false)).toBe('black legionary')
     await move(page, 'f3', 'f4', false)
@@ -70,7 +92,7 @@ test.describe('swap answer', () => {
   test('accepting makes black the white player', async ({ page, context }) => {
     const guest = await join(page, context)
     await move(page, 'e3', 'e4', false)
-    await guest.getByRole('button', { name: '✓' }).click()
+    await press(guest, '✓')
     await expect(guest.getByText('Swap Sides?')).toBeHidden()
     await expect.poll(() => occupant(guest, 'e4', false)).toBe('white legionary')
     await expect.poll(() => occupant(page, 'e4', true)).toBe('white legionary')
@@ -80,8 +102,9 @@ test.describe('swap answer', () => {
   test('declining keeps black on its own side', async ({ page, context }) => {
     const guest = await join(page, context)
     await move(page, 'e3', 'e4', false)
-    await guest.getByRole('button', { name: '✕' }).click()
+    await press(guest, '✕')
     await expect(guest.getByText('Swap Sides?')).toBeHidden()
+    await expect.poll(() => guest.evaluate(() => window.scrollY)).toBe(0)
     await move(guest, 'e11', 'e10', true)
     await expect.poll(() => occupant(page, 'e10', false)).toBe('black legionary')
   })
