@@ -81,6 +81,9 @@ export class Room extends DurableObject<Env> {
     for (const other of others)
       other.send(JSON.stringify({ players: others.length, remaining: deadline - Date.now() }))
   }
+  override async webSocketError(ws: WebSocket): Promise<void> {
+    await this.webSocketClose(ws)
+  }
   override async alarm(): Promise<void> {
     this.broadcast({ abandoned: true })
     await this.release()

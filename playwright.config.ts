@@ -35,7 +35,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : '40%',
+  workers: isCI ? 1 : '25%',
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:3000',
@@ -63,6 +63,7 @@ export default defineConfig({
     },
     {
       command: 'bun run build && bun start',
+      timeout: 180_000,
       url: 'http://localhost:3000',
       reuseExistingServer: !isCI,
       env: { NEXT_PUBLIC_WORKER: 'ws://localhost:8787' }
