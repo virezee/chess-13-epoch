@@ -8,7 +8,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2.2.0
@@ -16,26 +15,26 @@ jobs:
       - run: bun format:check
       - run: bunx wrangler types --cwd worker/
       - run: bun lint
+    timeout-minutes: 5
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2.2.0
       - run: bun i --frozen-lockfile
       - run: bun run test
+    timeout-minutes: 5
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2.2.0
       - run: bun i --frozen-lockfile
       - run: bun run build
+    timeout-minutes: 10
   e2e:
     needs: [lint, test, build]
     runs-on: ubuntu-latest
-    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2.2.0
@@ -48,3 +47,4 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+    timeout-minutes: 180
