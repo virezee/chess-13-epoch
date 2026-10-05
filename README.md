@@ -74,6 +74,6 @@ All piece images are licensed under CC BY-SA 3.0 and CC BY-SA 4.0.
 
 ## Licence
 
-Copyright (C) 2026 Zee
+Copyright © 2026 Zee
 
 Licensed under the [GNU Affero General Public License v3.0](./LICENSE).
