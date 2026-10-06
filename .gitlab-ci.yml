@@ -1,19 +1,55 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/user/application_security/sast/#available-cicd-variables
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure/
-# Dependency Scanning customization: https://docs.gitlab.com/user/application_security/dependency_scanning/dependency_scanning_sbom/#customizing-analyzer-behavior
-# Container Scanning customization: https://docs.gitlab.com/user/application_security/container_scanning/#customizing-analyzer-behavior
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ci/variables/#cicd-variable-precedence
-stages:
-  - test
-  - secret-detection
-sast:
-  stage: test
+default:
+  before_script: [bun i --frozen-lockfile]
+  image: oven/bun
+  tags: [saas-linux-small-amd64]
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
-variables:
-  SECRET_DETECTION_ENABLED: 'true'
+stages: [test, secret-detection, e2e, deploy]
+workflow:
+  name: '$CI_COMMIT_REF_NAME'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|develop|release\/.+)$/
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == 'push'
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /^(main|develop|release\/.+)$/
+sast:
+  inherit:
+    default: false
+  stage: test
+lint:
+  script:
+    - bun format:check
+    - bunx wrangler types --cwd worker/
+    - bun lint
+  stage: test
+  timeout: 5m
+test:
+  script:
+    - bun run test
+  stage: test
+  timeout: 5m
+build:
+  script:
+    - bun run build
+  stage: test
+  timeout: 10m
 secret_detection:
+  inherit:
+    default: false
+  rules:
+    - if: $SECRET_DETECTION_ENABLED == 'true'
   stage: secret-detection
+  variables:
+    SECRET_DETECTION_ENABLED: 'true'
+e2e:
+  artifacts:
+    paths: [playwright-report/]
+    expire_in: 30 days
+    name: playwright-report
+    when: always
+  script:
+    - bunx playwright install --with-deps
+    - bun run test:e2e
+  stage: e2e
+  timeout: 3h

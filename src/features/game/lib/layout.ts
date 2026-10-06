@@ -23,7 +23,7 @@ export const remapIds = (
   const next = new Map(ids)
   let id = lastId
   if (move !== null) {
-    move.captures?.forEach(square => next.delete(square))
+    for (const square of move.captures ?? []) next.delete(square)
     if (move.sentinel !== undefined) {
       const sentinelId = next.get(move.sentinel.from)
       next.delete(move.sentinel.from)
@@ -31,7 +31,8 @@ export const remapIds = (
     }
     const moverId = next.get(move.from)
     next.delete(move.from)
-    if (moverId !== undefined && !move.captures?.includes(move.from)) next.set(move.to, moverId)
+    if (moverId !== undefined && !(move.captures?.includes(move.from) ?? false))
+      next.set(move.to, moverId)
   }
   for (const square of Object.keys(occupancy))
     if (!next.has(square)) {

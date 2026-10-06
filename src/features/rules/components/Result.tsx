@@ -18,10 +18,25 @@ function Endings() {
         Whoever plays that move loses.
       </li>
       <li>
+        <span className='font-semibold text-ink'>A player resigns.</span> The other side wins.
+      </li>
+      <li>
+        <span className='font-semibold text-ink'>
+          A player leaves and does not come back within 60 seconds.
+        </span>{' '}
+        The side that stayed wins.
+      </li>
+      <li>
         <span className='font-semibold text-ink'>The no-progress limit runs out.</span> Draw.
       </li>
       <li>
         <span className='font-semibold text-ink'>Neither side has enough material to mate.</span>{' '}
+        Draw.
+      </li>
+      <li>
+        <span className='font-semibold text-ink'>
+          One player offers a draw and the other accepts.
+        </span>{' '}
         Draw.
       </li>
     </ul>
@@ -54,7 +69,7 @@ function Repetition() {
 function NoProgress() {
   return (
     <>
-      <h3 className='mt-6 font-reading text-[18px] leading-none text-ink'>The no-progress limit</h3>
+      <h3 className='mt-6 font-reading text-[18px] leading-none text-ink'>The No-Progress Limit</h3>
       <p className='mt-3 text-[15px] leading-relaxed text-ink-dim'>
         The game is drawn once neither side has made progress for long enough. Progress is a
         capture, a blast, a Legionary step or a promotion. Every turn without one adds a point to
@@ -96,7 +111,7 @@ export function Result() {
     <section>
       <h2 className='font-reading text-[22px] leading-none text-ink'>The Result</h2>
       <p className='mt-3 text-[15px] leading-relaxed text-ink-dim'>
-        White moves first, and the game is decided on the Pope. There are five results, and two of
+        White moves first, and the game is decided on the Pope. There are eight results, and two of
         them do not exist in chess.
       </p>
       <Endings />

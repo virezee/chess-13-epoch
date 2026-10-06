@@ -2,6 +2,13 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "arrowParens": "avoid",
   "bracketSameLine": true,
+  "ignorePatterns": [
+    "src/constants/style.ts",
+    "src/features/game/components/panel/GameStatus.tsx",
+    "src/features/game/lib/annotation.ts",
+    "src/styles/globals.css",
+    "tests/**"
+  ],
   "insertFinalNewline": false,
   "jsxSingleQuote": true,
   "semi": false,

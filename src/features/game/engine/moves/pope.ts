@@ -38,11 +38,11 @@ export const pope = (
   }
   const castlings = CASTLING[side]
   if (from !== castlings.home) return moves
-  for (const [avail, castling] of [
+  for (const [isAvail, castling] of [
     [castlingSide.left, castlings.left],
     [castlingSide.right, castlings.right]
   ] as const) {
-    if (!avail) continue
+    if (!isAvail) continue
     const move = castle(side, occupancy, from, castling)
     if (move) moves.push(move)
   }

@@ -6,7 +6,9 @@ import { parseSquare, makeSquare, isOnBoard } from '../../lib/coordinate'
 import { isDormant } from './emperor'
 
 export const riposteSquares = (side: Side, occupancy: SquareOccupant, move: Move): string[] =>
-  (move.captures ?? []).filter(square => occupancy[square] && occupancy[square].side !== side)
+  (move.captures ?? []).filter(
+    square => occupancy[square] !== undefined && occupancy[square].side !== side
+  )
 export const marshal = (side: Side, occupancy: SquareOccupant, from: string): Move[] => {
   const origin = parseSquare(from)
   const moves: Move[] = []

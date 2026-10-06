@@ -1,59 +1,67 @@
 'use client'
 
-import type { Move, Save } from '@/types/game'
-import { useState, useMemo, useEffect } from 'react'
-import { canSwap } from '@/features/game/engine/apply'
-import { opening, turn } from '@/features/game/engine/turn'
-import { readSave, writeSave, clearSave } from '@/features/game/lib/save'
+import { use } from 'react'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { Board } from '@/features/game/components/Board'
 import { Panel } from '@/features/game/components/Panel'
-import { takeResign, takeNewGame } from '@/lib/action'
+import { Invite } from '@/features/game/components/Invite'
+import { useGame, boardProps, panelProps } from '@/features/game/lib/play'
 
-export default function Home() {
-  const [load, setLoad] = useState(false)
-  const [save, setSave] = useState<Save>(opening)
-  const [promotions, setPromotions] = useState<Move[]>([])
-  const [pending, setPending] = useState<'resign' | 'new' | null>(null)
-  const [key, setKey] = useState(0)
-  const { position, moves, result } = useMemo(() => turn(save, null), [save])
-  useEffect(() => {
-    const stored = readSave()
-    // oxlint-disable-next-line react-hooks/set-state-in-effect
-    if (stored !== null) setSave(stored)
-    setLoad(true)
-  }, [])
-  const playMove = (move: Move) => {
-    const next = turn(save, move)
-    setSave(next.save)
-    setPromotions([])
-    if (next.result === null) writeSave(next.save)
-    else clearSave()
-  }
+function Summary() {
   return (
-    <main className='mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-2 xl:grid-cols-[18.5rem_minmax(0,1fr)_20rem] xl:gap-5 xl:px-5 xl:py-5'>
-      <h1 className='sr-only'>Chess 13: Epoch</h1>
-      <Board
-        key={key}
-        position={load ? position : { ...position, occupancy: {} }}
-        lastMove={save.match.lastMove}
-        locked={canSwap(position, save.match) || result !== null || pending !== null}
-        moves={moves}
-        result={result}
-        onMove={playMove}
-        onPromotions={setPromotions}
+    <section className='mx-auto w-full max-w-220 select-text px-4 pb-6 font-reading text-[15px] leading-relaxed text-ink-dim xl:px-5'>
+      <p>
+        Chess 13: Epoch is a free chess variant on a 13 by 13 board. Only the king and the queen
+        move the way you already know. Every other piece is new, and each one is enhanced or
+        restricted depending on where it stands. Host a game, send the link, and play a friend
+        straight in your browser, with no account and no install.{' '}
+        <Link href='/rules' className='text-ink underline underline-offset-2'>
+          Read the rules
+        </Link>
+        .
+      </p>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'VideoGame',
+            name: 'Chess 13: Epoch',
+            url: 'https://chess-13-epoch.vercel.app',
+            description: 'A free chess variant on a 13×13 board, played online in the browser.',
+            gamePlatform: 'Web browser',
+            playMode: 'MultiPlayer',
+            isAccessibleForFree: true,
+            offers: { '@type': 'Offer', price: 0, priceCurrency: 'USD' }
+          })
+        }}
       />
-      <Panel
-        save={save}
-        setSave={setSave}
-        position={position}
-        promotions={promotions}
-        pending={pending}
-        setPending={setPending}
-        result={result}
-        onMove={playMove}
-        onResign={() => takeResign(save, setSave, setPromotions, position)}
-        onNewGame={() => takeNewGame(setSave, setPromotions, setKey)}
-      />
-    </main>
+    </section>
+  )
+}
+export default function Home({ params }: { params: Promise<{ code?: string }> }) {
+  const { code } = use(params)
+  const game = useGame(code)
+  const { room } = game
+  if (room.rejected) notFound()
+  if (code !== undefined && room.role === null) return null
+  return (
+    <>
+      <main className='mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-2 xl:grid-cols-[18.5rem_minmax(0,1fr)_20rem] xl:gap-5 xl:px-5 xl:py-5'>
+        <h1 className='sr-only'>Chess 13: Epoch</h1>
+        <Board key={game.key} {...boardProps(game)} />
+        <Panel {...panelProps(game)} />
+        {room.link !== null && room.players < 2 && (
+          <Invite
+            link={room.link}
+            onClose={() => {
+              room.setLink(null)
+            }}
+          />
+        )}
+      </main>
+      {code === undefined && <Summary />}
+    </>
   )
 }

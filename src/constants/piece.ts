@@ -1,10 +1,10 @@
 import type { PieceName, Side } from '@/types/material'
-import type { Castling, CastlingSide } from '@/types/game'
-import type { ENHANCED, RESTRICTED } from './zone'
+import type { Zone, Castling, CastlingSide } from '@/types/game'
 import { SIZE } from './board'
+import { WHITE, BLACK } from './player'
 import { LEAP_3_2, LEAP_2_1 } from './direction'
+import { ENHANCED, RESTRICTED } from './zone'
 
-type Zone = typeof ENHANCED | typeof RESTRICTED
 export const POPE = 'pope'
 export const EMPEROR = 'emperor'
 export const MARSHAL = 'marshal'
@@ -14,40 +14,42 @@ export const MAGE = 'mage'
 export const HERALD = 'herald'
 export const TEMPLAR = 'templar'
 export const LEGIONARY = 'legionary'
+export const DORMANT = 'dormant'
+export const AWAKE = 'awake'
 export const REACH = {
-  assassin: {
-    enhanced: { reach: SIZE },
-    restricted: { reach: 6 }
+  [ASSASSIN]: {
+    [ENHANCED]: { reach: SIZE },
+    [RESTRICTED]: { reach: 6 }
   },
-  sentinel: {
-    enhanced: { quiet: 6, capture: SIZE },
-    restricted: { quiet: 3, capture: 6 }
+  [SENTINEL]: {
+    [ENHANCED]: { quiet: 6, capture: SIZE },
+    [RESTRICTED]: { quiet: 3, capture: 6 }
   },
-  mage: {
-    enhanced: { quiet: 2 },
-    restricted: { quiet: 1 }
+  [MAGE]: {
+    [ENHANCED]: { quiet: 2 },
+    [RESTRICTED]: { quiet: 1 }
   },
-  herald: {
-    enhanced: { diagonal: SIZE },
-    restricted: { diagonal: 6 }
+  [HERALD]: {
+    [ENHANCED]: { diagonal: SIZE },
+    [RESTRICTED]: { diagonal: 6 }
   },
-  legionary: {
-    enhanced: { quiet: 2 },
-    restricted: { quiet: 1 }
+  [LEGIONARY]: {
+    [ENHANCED]: { quiet: 2 },
+    [RESTRICTED]: { quiet: 1 }
   }
 } as const satisfies Partial<Record<PieceName, Record<Zone, object>>>
 export const LEAP = {
-  templar: { restricted: LEAP_3_2, enhanced: [...LEAP_3_2, ...LEAP_2_1] }
+  [TEMPLAR]: { [ENHANCED]: [...LEAP_3_2, ...LEAP_2_1], [RESTRICTED]: LEAP_3_2 }
 } as const satisfies Partial<
   Record<PieceName, Record<Zone, readonly (readonly [number, number])[]>>
 >
 export const CASTLING = {
-  white: {
+  [WHITE]: {
     home: 'g1',
     left: { to: 'd1', sentinel: 'a1', sentinelTo: 'e1', between: ['b1', 'c1', 'd1', 'e1', 'f1'] },
     right: { to: 'j1', sentinel: 'm1', sentinelTo: 'i1', between: ['h1', 'i1', 'j1', 'k1', 'l1'] }
   },
-  black: {
+  [BLACK]: {
     home: 'g13',
     left: {
       to: 'd13',
@@ -78,7 +80,7 @@ export const BACK_RANK = [
   TEMPLAR,
   SENTINEL
 ] as const satisfies readonly PieceName[]
-export const LETTER: Record<PieceName, string> = {
+export const LETTER = {
   [POPE]: 'P',
   [EMPEROR]: 'E',
   [MARSHAL]: 'M',
@@ -89,7 +91,7 @@ export const LETTER: Record<PieceName, string> = {
   [TEMPLAR]: 'T',
   [LEGIONARY]: 'L'
 } as const satisfies Record<PieceName, string>
-export const CLASSIC_LETTER: Record<PieceName, string> = {
+export const CLASSIC_LETTER = {
   [POPE]: 'K',
   [EMPEROR]: 'Q',
   [MARSHAL]: 'M',
@@ -101,16 +103,18 @@ export const CLASSIC_LETTER: Record<PieceName, string> = {
   [LEGIONARY]: 'P'
 } as const satisfies Record<PieceName, string>
 export const CLASSIC_PLY: Record<string, string> = Object.fromEntries(
-  Object.entries(LETTER).map(([name, letter]) => [letter, CLASSIC_LETTER[name as PieceName]])
+  ([LEGIONARY, ...new Set(BACK_RANK)] as const).map(
+    name => [LETTER[name], CLASSIC_LETTER[name]] as const
+  )
 )
 export const VALUE = {
-  pope: { enhanced: Infinity, restricted: Infinity },
-  emperor: { enhanced: 15, restricted: 15 },
-  marshal: { enhanced: 13, restricted: 13 },
-  assassin: { enhanced: 10, restricted: 7 },
-  sentinel: { enhanced: 9, restricted: 6 },
-  mage: { enhanced: 8, restricted: 5 },
-  herald: { enhanced: 7, restricted: 5 },
-  templar: { enhanced: 7, restricted: 5 },
-  legionary: { enhanced: 2, restricted: 2 }
+  [POPE]: { enhanced: Infinity, restricted: Infinity },
+  [EMPEROR]: { enhanced: 15, restricted: 15 },
+  [MARSHAL]: { enhanced: 13, restricted: 13 },
+  [ASSASSIN]: { enhanced: 10, restricted: 7 },
+  [SENTINEL]: { enhanced: 9, restricted: 6 },
+  [MAGE]: { enhanced: 8, restricted: 5 },
+  [HERALD]: { enhanced: 7, restricted: 5 },
+  [TEMPLAR]: { enhanced: 7, restricted: 5 },
+  [LEGIONARY]: { enhanced: 2, restricted: 2 }
 } as const satisfies Record<PieceName, Record<Zone, number>>

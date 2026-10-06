@@ -17,13 +17,9 @@ const ring = (from: string, distance: number): string[] => {
   return squares
 }
 const steps = (occupancy: SquareOccupant, from: string, isEnhanced: boolean): Move[] => {
+  const { quiet } = REACH.mage[isEnhanced ? ENHANCED : RESTRICTED]
   const squares: string[] = []
-  for (
-    let distance = 1;
-    distance <= REACH.mage[isEnhanced ? ENHANCED : RESTRICTED].quiet;
-    distance += 1
-  )
-    squares.push(...ring(from, distance))
+  for (let distance = 1; distance <= quiet; distance += 1) squares.push(...ring(from, distance))
   return squares.filter(to => !occupancy[to]).map(to => ({ from, to }))
 }
 const blast = (
@@ -34,7 +30,7 @@ const blast = (
 ): Move[] => {
   const victims: string[] = []
   let hasEnemy = false
-  let ownPope = false
+  let isOwnPope = false
   for (const to of ring(from, 1)) {
     const occupant = occupancy[to]
     if (!occupant) continue
@@ -44,11 +40,11 @@ const blast = (
       victims.push(to)
       continue
     }
-    if (occupant.piece === POPE) ownPope = true
+    if (occupant.piece === POPE) isOwnPope = true
     if (!isEnhanced && !isDormant(occupant)) victims.push(to)
   }
   if (!hasEnemy) return []
-  if (!isEnhanced && ownPope) return []
+  if (!isEnhanced && isOwnPope) return []
   return [{ from, to: from, captures: victims }]
 }
 export const mage = (

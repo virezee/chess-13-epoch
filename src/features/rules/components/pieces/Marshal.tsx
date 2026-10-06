@@ -1,5 +1,6 @@
 // oxlint-disable import/max-dependencies
 // oxlint-disable eslint/max-lines
+import { FILES, RANKS, COMMAND_SQUARE } from '@/constants/board'
 import { WHITE, BLACK } from '@/constants/player'
 import {
   POPE,
@@ -11,7 +12,6 @@ import {
   TEMPLAR,
   LEGIONARY
 } from '@/constants/piece'
-import { FILES, RANKS, COMMAND_SQUARE } from '@/constants/board'
 import { BUFF, MARKS } from '@/constants/style'
 import { RIPOSTE_FLAG, RIPOSTE_BLAST, RIPOSTE_EN_PRISE } from '../../constants/scene'
 import { marshal } from '@/features/game/engine/moves'
@@ -34,7 +34,7 @@ function Range({ from, caption }: { from: string; caption: string }) {
         moves={null}
         captures={null}
         marks={{
-          background: BUFF.white,
+          background: BUFF[WHITE],
           clip: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
           squares: FILES.flatMap(file => RANKS.map(rank => `${file}${rank}`)).filter(
             square => square !== from && isEnhanced(from, square)
@@ -259,7 +259,7 @@ function Arrival() {
       </p>
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
         An Assassin attacks along its line as soon as the square behind the piece is empty. If that
-        square is attacked, the Marshal can still captures and the Assassin cannot: that is the
+        square is attacked, the Marshal can still capture and the Assassin cannot: that is the
         Assassin&apos;s own problem. If the square is occupied there is no attack, and neither of
         them can capture.
       </p>
@@ -384,10 +384,11 @@ function EnPrise() {
       </div>
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
         A Mage blasting its own never opens a riposte, whatever the Marshal sees. The Assassin is
-        safe only when it blocks the Marshal&apos;s path to the square where the capture happened.
-        If it does not, the Marshal may capture it, and this is the one time an Assassin can be
-        captured right after capturing, since the riposte creates an attack the landing square did
-        not have before.
+        safe when it blocks the Marshal&apos;s path to the square where the capture happened, or
+        when it lands on a square off the Marshal&apos;s lines. Otherwise the Marshal may capture
+        it, since the riposte creates an attack the landing square did not have before. That is one
+        of only two ways an Assassin can be captured right after capturing. The other is a dormant
+        Emperor woken by the landing, described under the Emperor.
       </p>
     </>
   )

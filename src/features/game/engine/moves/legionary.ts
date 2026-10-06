@@ -22,7 +22,7 @@ const quiets = (
   const moves: Move[] = []
   for (let distance = 1; distance <= reach; distance += 1) {
     const toRank = rank + up * distance
-    if (toRank < 1 || toRank > SIZE) break
+    if (!isOnBoard({ file, rank: toRank })) break
     const to = makeSquare({ file, rank: toRank })
     if (occupancy[to]) break
     moves.push({ from, to })
@@ -83,12 +83,10 @@ export const legionary = (
   isEnhanced: boolean,
   promotions: Promotion[],
   enPassant: EnPassant | null
-): Move[] => {
-  return [
-    ...[
-      ...quiets(side, occupancy, from, isEnhanced),
-      ...captures(side, occupancy, from, enPassant)
-    ].flatMap(move => withPromotions(side, move, promotions)),
-    ...transforms(side, from, promotions)
-  ]
-}
+): Move[] => [
+  ...[
+    ...quiets(side, occupancy, from, isEnhanced),
+    ...captures(side, occupancy, from, enPassant)
+  ].flatMap(move => withPromotions(side, move, promotions)),
+  ...transforms(side, from, promotions)
+]
