@@ -10,7 +10,7 @@ function Fill({
   square,
   backgroundColour,
   isFlipped,
-  isInteractive
+  isInteractive = false
 }: {
   square: string
   backgroundColour: string

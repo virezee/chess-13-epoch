@@ -26,7 +26,7 @@ const line = (
   }
   const { quiet, capture } = REACH.sentinel[isEnhanced ? ENHANCED : RESTRICTED]
   const moves: Move[] = []
-  let through = false
+  let isThrough = false
   for (let distance = 1; distance <= Math.max(quiet, capture); distance += 1) {
     const file = origin.file + fileDelta * distance
     const rank = origin.rank + rankDelta * distance
@@ -38,12 +38,12 @@ const line = (
       continue
     }
     if (occupant.side !== side) {
-      if (!through && distance <= capture && !isDormant(occupant))
+      if (!isThrough && distance <= capture && !isDormant(occupant))
         moves.push({ from, to, captures: [to] })
       break
     }
     if (!(isEnhanced && isTowardMarshal)) break
-    through = true
+    isThrough = true
   }
   return moves
 }

@@ -4,8 +4,8 @@ export function SwapRule() {
       <h2 className='font-reading text-[22px] leading-none text-ink'>The Swap Rule</h2>
       <p className='mt-3 text-[15px] leading-relaxed text-ink-dim'>
         Whoever moves first wins more often. Records from other games put that edge somewhere around
-        52% to 56%, and a wider board does nothing to remove it. This rule is how black is
-        paid back for it, and it works without anyone having to measure how large the edge here is.
+        52% to 56%, and a wider board does nothing to remove it. This rule is how black is paid back
+        for it, and it works without anyone having to measure how large the edge here is.
       </p>
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
         After white has played the opening move, black may take white&apos;s side instead of making

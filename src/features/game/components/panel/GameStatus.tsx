@@ -1,14 +1,22 @@
 import type { ReactNode } from 'react'
+import { RESIGN, DRAW, NEW } from '@/constants/room'
 import type { Counter, Result } from '@/types/game'
 import type { GameCounters } from '@/types/panel'
+import type { ControlsProps } from '../../types/props'
 import { useEffect } from 'react'
 import { cn } from '@/lib/cn'
 
-type ControlsProps = {
-  pending: 'resign' | 'new' | null
-  setPending: (pending: 'resign' | 'new' | null) => void
-  onResign: () => void
-  onNewGame: () => void
+function Presence({ players, seconds }: { players: number; seconds: number | null }) {
+  if (players >= 2) return null
+  return (
+    <p
+      className={cn(
+        'border-t border-line px-3.5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em]',
+        seconds === null ? 'text-ink-faint' : 'text-alert'
+      )}>
+      {seconds === null ? 'Waiting For Opponent' : `Opponent Left · ${seconds}s`}
+    </p>
+  )
 }
 function RepetitionGauge({ count, limit }: Counter) {
   const nearLimit = count >= limit - 1
@@ -43,7 +51,7 @@ function RepetitionGauge({ count, limit }: Counter) {
 }
 function NoProgressGauge({ count, limit }: Counter) {
   const ratio = limit === 0 ? 0 : Math.min(count / limit, 1)
-  const nearLimit = ratio >= 0.8
+  const nearLimit = ratio >= .8
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <div className='flex items-baseline justify-between gap-3'>
@@ -99,6 +107,12 @@ function Prompt({
   onDecline: () => void
   onAccept: () => void
 }) {
+  useEffect(() => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    return () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <p className='text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
@@ -115,65 +129,108 @@ function Prompt({
     </div>
   )
 }
-function Controls({ pending, setPending, onResign, onNewGame }: ControlsProps) {
+function Controls({ pending, setPending, offer, onResign, onOffer, onReply }: ControlsProps) {
+  if (offer?.outgoing === false)
+    return (
+      <Prompt
+        label={offer.offer === DRAW ? 'Accept A Draw?' : 'Accept A New Game?'}
+        onDecline={() => {
+          onReply(false)
+        }}
+        onAccept={() => {
+          onReply(true)
+        }}
+      />
+    )
+  if (offer !== null)
+    return (
+      <p className='border-t border-line px-3.5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint'>
+        {offer.offer === DRAW ? 'Draw' : 'New Game'} Offered · Waiting
+      </p>
+    )
   if (pending !== null)
     return (
       <Prompt
-        label={pending === 'resign' ? 'Resign?' : 'Start A New Game?'}
-        onDecline={() => setPending(null)}
+        label={{ resign: 'Resign?', draw: 'Offer A Draw?', new: 'Offer A New Game?' }[pending]}
+        onDecline={() => {
+          setPending(null)
+        }}
         onAccept={() => {
           setPending(null)
-          if (pending === 'resign') onResign()
-          else onNewGame()
+          if (pending === RESIGN) onResign()
+          else onOffer(pending)
         }}
       />
     )
   return (
     <div className='border-t border-line px-3.5 py-3'>
       <div className='flex gap-2'>
-        <Action onClick={() => setPending('resign')}>Resign</Action>
-        <Action onClick={() => setPending('new')}>New Game</Action>
+        {([RESIGN, DRAW] as const).map(choice => (
+          <Action
+            key={choice}
+            onClick={() => {
+              setPending(choice)
+            }}>
+            {choice === RESIGN ? 'Resign' : 'Draw'}
+          </Action>
+        ))}
       </div>
     </div>
   )
 }
-function Outcome({ result, onNewGame }: { result: Result; onNewGame: () => void }) {
+function Outcome({
+  result,
+  onHost,
+  ...controls
+}: ControlsProps & { result: Result; onHost: (() => void) | null }) {
   const isDraw = result.winner === null
   return (
-    <div className='border-t border-line px-3.5 py-3'>
-      <div
-        className={cn(
-          'rounded-[3px] border px-3 py-2.5',
-          isDraw ? 'border-line-strong bg-surface-2' : 'border-good/60 bg-good/10'
-        )}>
-        <p
+    <>
+      <div className='border-t border-line px-3.5 py-3'>
+        <div
           className={cn(
-            'text-[11px] font-semibold uppercase tracking-[0.12em]',
-            isDraw ? 'text-ink-dim' : 'text-good'
+            'rounded-[3px] border px-3 py-2.5',
+            isDraw ? 'border-line-strong bg-surface-2' : 'border-good/60 bg-good/10'
           )}>
-          {isDraw ? 'Draw' : `${result.winner} wins`}
-        </p>
-        <p className='mt-1 text-[11px] capitalize text-ink-faint'>{result.reason}</p>
+          <p
+            className={cn(
+              'text-[11px] font-semibold uppercase tracking-[0.12em]',
+              isDraw ? 'text-ink-dim' : 'text-good'
+            )}>
+            {isDraw ? 'Draw' : `${result.winner} wins`}
+          </p>
+          <p className='mt-1 text-[11px] capitalize text-ink-faint'>{result.reason}</p>
+        </div>
+        {controls.offer === null && controls.pending === null && (
+          <div className='mt-2 flex'>
+            <Action
+              onClick={() => {
+                if (onHost === null) controls.setPending(NEW)
+                else onHost()
+              }}>
+              New Game
+            </Action>
+          </div>
+        )}
       </div>
-      <div className='mt-2 flex'>
-        <Action onClick={onNewGame}>New Game</Action>
-      </div>
-    </div>
+      {(controls.offer !== null || controls.pending !== null) && <Controls {...controls} />}
+    </>
   )
 }
 export function GameStatus(
   props: ControlsProps & {
+    players: number
+    seconds: number | null
     counters: GameCounters
     canSwap: boolean
     result: Result | null
+    onHost: (() => void) | null
     onDecline: () => void
     onAccept: () => void
   }
 ) {
-  const { counters, canSwap, result, onDecline, onAccept, ...rest } = props
-  useEffect(() => {
-    window.scrollTo({ top: canSwap ? document.body.scrollHeight : 0, behavior: 'smooth' })
-  }, [canSwap])
+  const { players, seconds, counters, canSwap, result, onHost, onDecline, onAccept, ...rest } =
+    props
   return (
     <section className='overflow-hidden rounded border border-line bg-surface'>
       <header className='px-3.5 py-3'>
@@ -181,16 +238,25 @@ export function GameStatus(
           Clocks Off · Counters
         </p>
       </header>
+      {onHost === null && <Presence players={players} seconds={seconds} />}
       <RepetitionGauge count={counters.repetition.count} limit={counters.repetition.limit} />
       <NoProgressGauge count={counters.noProgress.count} limit={counters.noProgress.limit} />
       {result === null ? (
-        canSwap ? (
-          <Prompt label='Swap Sides?' onDecline={onDecline} onAccept={onAccept} />
+        onHost === null ? (
+          canSwap ? (
+            <Prompt label='Swap Sides?' onDecline={onDecline} onAccept={onAccept} />
+          ) : (
+            players >= 2 && <Controls {...rest} />
+          )
         ) : (
-          <Controls {...rest} />
+          <div className='border-t border-line px-3.5 py-3'>
+            <div className='flex'>
+              <Action onClick={onHost}>Host Game</Action>
+            </div>
+          </div>
         )
       ) : (
-        <Outcome result={result} onNewGame={rest.onNewGame} />
+        <Outcome result={result} onHost={onHost} {...rest} />
       )}
     </section>
   )

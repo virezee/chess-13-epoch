@@ -1,5 +1,5 @@
+import type { Side, Piece } from '@/types/material'
 import type { Board, Move, State, Position } from '@/types/game'
-import type { Side, PieceName, Piece } from '@/types/material'
 import { CORNERS } from '@/constants/board'
 import { POPE, EMPEROR, MARSHAL, ASSASSIN, MAGE } from '@/constants/piece'
 import { parseSquare, makeSquare } from '../lib/coordinate'
@@ -43,7 +43,8 @@ const isEvasion = (
       : { side, piece: move.promotesTo }
     : piece
   return checkers.every(checker => {
-    if (move.captures?.includes(checker) || isBlocking(pope, checker, move.to)) return true
+    if ((move.captures?.includes(checker) ?? false) || isBlocking(pope, checker, move.to))
+      return true
     if (board.occupancy[checker]?.piece !== ASSASSIN) return false
     const target = parseSquare(checker)
     const dest = CORNERS.includes(pope)
@@ -55,9 +56,9 @@ const isEvasion = (
     if (move.to === dest) return true
     const view = {
       moved: { piece: promoted, square: move.to },
-      vacated: [move.from, ...(move.captures ?? [])]
+      vacated: [move.from, ...(move.captures ?? []), pope, checker]
     }
-    return threats(board, side, view, false, dest).some(defender => defender !== pope)
+    return threats(board, side, view, false, dest).length > 0
   })
 }
 export const candidate = (position: Position): Move[] => {
@@ -67,15 +68,15 @@ export const candidate = (position: Position): Move[] => {
   const isAssCheck = checkers.some(square => occupancy[square]?.piece === ASSASSIN)
   const isDoubleCheck = checkers.length > 1 && !isAssCheck
   const moves: Move[] = []
-  for (const name of Object.keys(pieces[side]) as PieceName[]) {
+  for (const [name, squares] of Object.entries(pieces[side])) {
     if (isDoubleCheck && name !== POPE && name !== MAGE && name !== ASSASSIN) continue
-    for (const square of pieces[side][name]) {
+    for (const square of squares) {
       const piece = occupancy[square]
       if (!piece) continue
-      if (name === EMPEROR && piece.awake !== true) continue
+      if (piece.piece === EMPEROR && piece.awake !== true) continue
       for (const move of generate(
         side,
-        name,
+        piece.piece,
         occupancy,
         marshalSq,
         square,

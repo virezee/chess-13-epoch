@@ -1,11 +1,15 @@
 import type { Side, PieceName, Piece, PieceSquares, SquareOccupant } from './material'
+import type { Role } from './network'
+import type { ENHANCED, RESTRICTED } from '@/constants/zone'
 import type {
   CHECKMATE,
   STALEMATE,
   REPETITION,
+  RESIGNATION,
+  ABANDONMENT,
   NO_PROGRESS,
   INSUFFICIENT_MATERIAL,
-  RESIGNATION
+  AGREEMENT
 } from '@/constants/outcome'
 
 export interface Board {
@@ -16,6 +20,7 @@ export interface Square {
   file: number
   rank: number
 }
+export type Zone = typeof ENHANCED | typeof RESTRICTED
 export interface Point {
   x: number
   y: number
@@ -77,11 +82,14 @@ export interface Position extends Board {
 }
 export interface Match {
   swap: boolean
-  whitePlayer: string | null
+  firstPlayer: Role
+  whitePlayer: Role
   lastMove: Move | null
   history: string[]
   pgn: string
   resigned: Side | null
+  abandoned: Side | null
+  agreed: boolean
 }
 export interface Save {
   side: Side
@@ -95,7 +103,9 @@ export interface Result {
     | typeof CHECKMATE
     | typeof STALEMATE
     | typeof REPETITION
+    | typeof RESIGNATION
+    | typeof ABANDONMENT
     | typeof NO_PROGRESS
     | typeof INSUFFICIENT_MATERIAL
-    | typeof RESIGNATION
+    | typeof AGREEMENT
 }

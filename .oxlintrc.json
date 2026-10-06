@@ -1,12 +1,20 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "react", "nextjs", "oxc", "import", "vitest"],
   "categories": {
     "correctness": "error",
     "pedantic": "error",
     "perf": "error",
     "suspicious": "warn"
   },
+  "env": {
+    "builtin": true
+  },
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
+  "plugins": ["typescript", "unicorn", "react", "nextjs", "oxc", "import", "vitest"],
   "overrides": [
     {
       "files": ["**/*.ts"],
@@ -18,9 +26,13 @@
   "rules": {
     "import/exports-last": "error",
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
-    "react/react-in-jsx-scope": "allow"
+    "react/react-in-jsx-scope": "allow",
+    "typescript/prefer-readonly-parameter-types": "allow",
+    "typescript/switch-exhaustiveness-check": "allow"
   },
-  "env": {
-    "builtin": true
+  "settings": {
+    "tailwindcss": {
+      "entryPoint": "src/styles/globals.css"
+    }
   }
 }

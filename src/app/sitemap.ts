@@ -1,9 +1,25 @@
 import type { MetadataRoute } from 'next'
 
-export const dynamic = 'force-static'
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: 'https://chess-13-epoch.vercel.app', changeFrequency: 'monthly', priority: 1 },
-    { url: 'https://chess-13-epoch.vercel.app/rules', changeFrequency: 'monthly', priority: 0.8 }
+    {
+      url: 'https://chess-13-epoch.vercel.app',
+      lastModified: new Date('2026-09-30')
+    },
+    {
+      url: 'https://chess-13-epoch.vercel.app/rules',
+      lastModified: new Date('2026-09-30'),
+      images: [
+        'https://chess-13-epoch.vercel.app/white/pope.png',
+        'https://chess-13-epoch.vercel.app/white/emperor.png',
+        'https://chess-13-epoch.vercel.app/white/marshal.png',
+        'https://chess-13-epoch.vercel.app/white/assassin.png',
+        'https://chess-13-epoch.vercel.app/white/sentinel.png',
+        'https://chess-13-epoch.vercel.app/white/mage.png',
+        'https://chess-13-epoch.vercel.app/white/herald.png',
+        'https://chess-13-epoch.vercel.app/white/templar.png',
+        'https://chess-13-epoch.vercel.app/white/legionary.png'
+      ]
+    }
   ]
 }

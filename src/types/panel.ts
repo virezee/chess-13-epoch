@@ -1,12 +1,14 @@
 import type { Side } from './material'
 import type { Promotion, Counter } from './game'
+import type { DORMANT, AWAKE } from '@/constants/piece'
+import type { FULL, PARTIAL, NONE } from '@/constants/zone'
 
 export interface ArmyState {
   player: string
   side: Side
-  emperor: 'dormant' | 'awake' | null
+  emperor: typeof DORMANT | typeof AWAKE | null
   marshalSquare: string | null
-  commandZone: 'full' | 'partial' | 'none'
+  commandZone: typeof FULL | typeof PARTIAL | typeof NONE
   pieceCount: number
   enhancedCount: number
   captured: { id: string; letter: string }[]

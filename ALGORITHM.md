@@ -235,9 +235,14 @@ step 7 left at the end of Black's move and reads them as the move being judged l
 
 One move can bring the first and the last of those at once. The draw is the result.
 
-One ending rides on no move at all. A player may resign while it is that player's turn, and the
-other side wins by it. It is read after every ending above, so a game already mated, stalemated or
-drawn keeps the result it earned, and the side that resigned is the one step 7 kept.
+Three endings ride on no move at all. Each is read after every ending above, so a game already
+mated, stalemated or drawn keeps the result it earned, and they are read in this order:
+
+- a player may resign while it is that player's turn, and the other side wins by it. The side
+  that resigned is the one step 7 kept
+- a player who drops out of the room and does not come back within one minute loses, and the
+  other side wins by abandonment. The room counts that minute, not either player
+- a draw offered by one player and accepted by the other ends the game drawn by agreement
 
 ## 7. Play the move
 
@@ -275,8 +280,8 @@ Then record what the next turn needs:
 - the move just applied, written as one ply and appended to the movetext step 8 keeps. This is
   the only step still holding the board the move was made from, so it is the only step that can
   read the piece's letter and the enhanced mark its own Marshal gave it
-- the side that resigned, once one has, since a resignation leaves no mark on the board for step 6
-  to read it from
+- the side that resigned, the side that left and whether a draw was agreed, once any of them has
+  happened, since none of them leaves a mark on the board for step 6 to read it from
 
 The repetition count is how often the board now standing has stood before. Five things make two
 boards the same one: where every piece stands, which side is to move, the castling rights, the
@@ -289,22 +294,29 @@ the moves step 6 names as resetting it can be undone.
 
 ## 8. Save and hand over
 
-If step 6 ended the game, mated, stalemated, drawn or resigned, delete the saved state and hand
-nothing over, since there is no turn left to continue into.
+Send the state to the room. The room keeps it and passes it on to the other player, and that
+board repeats from step 1 for Black.
 
-Otherwise persist the state so a reload can continue the game, then repeat from step 1 for
-Black.
+If step 6 ended the game, mated, stalemated, drawn or resigned, there is no turn left to
+continue into, but the room keeps the state all the same, so both players still see the
+finished game and can start the next one without leaving. An abandoned game is the exception:
+the minute that decided it also closes the room, and the state goes with it. Otherwise the room
+forgets the state only once both players have left.
 
-A reload reads the state back in one read and replays nothing. The movetext is read back with it
-and split into rows, since that list is what the player follows the game by, but no move is ever
-played again from it.
+The next game starts from the opening position, and the player who did not move first in the
+game before moves first in this one. The swap right comes back with it.
+
+A reload reconnects to the room, which sends the state back in one message and replays nothing.
+The movetext comes back with it and is split into rows, since that list is what the player
+follows the game by, but no move is ever played again from it.
 
 Written out:
 
 - the board, one entry per square, carrying the kind and the colour of what stands there
 - the side to move
 - the castling rights, the en passant right, the riposte flag and the swap right, as step 7
-  leaves them, and with them which player owns White once the swap has been taken
+  leaves them, and with them which player moved first and which player owns White, the two
+  differing only once the swap has been taken
 - for each side, whether its Emperor has been woken
 - for each side, the promotion slots still open, by kind and by file
 - the no-progress count, together with the limit read at its last reset, since the formula
@@ -314,6 +326,7 @@ Written out:
 - the move just played, kept as the squares it was applied with, so a reload can mark where it
   came from and where it went, and nothing at all before the first move. The movetext cannot
   answer this on its own, since castling writes no square
+- the side that resigned and whether a draw was agreed
 - the notation of the moves played, kept as a PGN whose movetext is long algebraic: the piece's
   letter, the square it left, `-` for a move or `x` for a capture, and the square it reached,
   `Tg1-h3` and `Tg1xh3`, with the Legionary carrying no letter. Because the square left is

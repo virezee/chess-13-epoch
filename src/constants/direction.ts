@@ -10,6 +10,10 @@ export const ORTHOGONAL = [
   [0, -1],
   [-1, 0]
 ] as const satisfies readonly (readonly [number, number])[]
+export const EVERY = [...DIAGONAL, ...ORTHOGONAL] as const satisfies readonly (readonly [
+  number,
+  number
+])[]
 export const LEAP_3_2 = [
   [2, 3],
   [3, 2],
@@ -30,7 +34,3 @@ export const LEAP_2_1 = [
   [-2, 1],
   [-1, 2]
 ] as const satisfies readonly (readonly [number, number])[]
-export const EVERY = [...ORTHOGONAL, ...DIAGONAL] as const satisfies readonly (readonly [
-  number,
-  number
-])[]

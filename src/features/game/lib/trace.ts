@@ -73,8 +73,7 @@ export const emperorFlag = ({ side, pieces, emperorAttackers }: Position): Trace
   if (emperor === null) return []
   return emperorAttackers.flatMap(attacker => roundTrip({ from: attacker, to: emperor }))
 }
-export const riposteFlag = (position: Position): Trace[] => {
-  const { side, pieces, occupancy, state } = position
+export const riposteFlag = ({ side, pieces, occupancy, state }: Position): Trace[] => {
   const marshal = pieces[side][MARSHAL][0] ?? null
   if (!state.riposte || marshal === null) return []
   return [

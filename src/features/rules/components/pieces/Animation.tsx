@@ -22,8 +22,15 @@ export function Animation({
 }) {
   const [isPlayed, setPlayed] = useState(false)
   useEffect(() => {
-    const timer = setTimeout(() => setPlayed(!isPlayed), isPlayed ? LOOP.duration : LOOP.delay)
-    return () => clearTimeout(timer)
+    const timer = setTimeout(
+      () => {
+        setPlayed(!isPlayed)
+      },
+      isPlayed ? LOOP.duration : LOOP.delay
+    )
+    return () => {
+      clearTimeout(timer)
+    }
   }, [isPlayed])
   return (
     <div className='rounded border border-line px-3.5 py-3'>
@@ -33,7 +40,7 @@ export function Animation({
       <Diagram
         subject={subject}
         pieces={pieces
-          .filter(occupant => !isPlayed || !move.captures?.includes(occupant.square))
+          .filter(occupant => !isPlayed || !(move.captures?.includes(occupant.square) ?? false))
           .map(occupant =>
             isPlayed && occupant.square === move.from
               ? place(occupant.side, occupant.piece, move.to, occupant.isEnhanced)
