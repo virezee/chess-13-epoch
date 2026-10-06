@@ -4,11 +4,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: 'https://chess-13-epoch.vercel.app',
-      lastModified: new Date('2026-09-30')
+      lastModified: new Date('2026-10-06')
     },
     {
       url: 'https://chess-13-epoch.vercel.app/rules',
-      lastModified: new Date('2026-09-30'),
+      lastModified: new Date('2026-10-06'),
       images: [
         'https://chess-13-epoch.vercel.app/white/pope.png',
         'https://chess-13-epoch.vercel.app/white/emperor.png',
