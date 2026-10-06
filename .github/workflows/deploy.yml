@@ -2,9 +2,9 @@ name: Deploy
 run-name: Deploy worker to Cloudflare by @${{ github.actor }}
 on:
   workflow_run:
-    workflows: [CI]
     types: [completed]
     branches: [main]
+    workflows: [CI]
 permissions:
   contents: read
 concurrency:

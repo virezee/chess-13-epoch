@@ -14,12 +14,42 @@ workflow:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /^(main|develop|release\/.+)$/
 sast:
+  inherit:
+    default: false
   stage: test
-  inherit:
-    default: false
-variables:
-  SECRET_DETECTION_ENABLED: 'true'
+lint:
+  script:
+    - bun format:check
+    - bunx wrangler types --cwd worker/
+    - bun lint
+  stage: test
+  timeout: 5m
+test:
+  script:
+    - bun run test
+  stage: test
+  timeout: 5m
+build:
+  script:
+    - bun run build
+  stage: test
+  timeout: 10m
 secret_detection:
-  stage: secret-detection
   inherit:
     default: false
+  rules:
+    - if: $SECRET_DETECTION_ENABLED == 'true'
+  stage: secret-detection
+  variables:
+    SECRET_DETECTION_ENABLED: 'true'
+e2e:
+  artifacts:
+    paths: [playwright-report/]
+    expire_in: 30 days
+    name: playwright-report
+    when: always
+  script:
+    - bunx playwright install --with-deps
+    - bun run test:e2e
+  stage: e2e
+  timeout: 3h

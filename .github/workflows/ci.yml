@@ -1,9 +1,9 @@
 name: CI
 run-name: CI on ${{ github.ref_name }} by @${{ github.actor }}
 on:
-  push:
-    branches: [main, develop, 'release/**']
   pull_request:
+    branches: [main, develop, 'release/**']
+  push:
     branches: [main, develop, 'release/**']
 jobs:
   lint:
@@ -41,8 +41,8 @@ jobs:
       - run: bun i --frozen-lockfile
       - run: bunx playwright install --with-deps
       - run: bun run test:e2e
-      - uses: actions/upload-artifact@v7.0.1
-        if: ${{ !cancelled() }}
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: playwright-report
           path: playwright-report/
