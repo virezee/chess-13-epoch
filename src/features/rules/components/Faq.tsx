@@ -28,10 +28,12 @@ function Outcomes() {
         material or a dead position, and by agreement.
       </p>
       <p className='mt-2.5 text-[15px] leading-relaxed text-ink-dim'>
-        Here most of those are gone. Stalemate is a win for the side that cannot move, and a third
-        repetition loses for whoever plays it. Insufficient material counts only when the two Popes
-        stand alone (not final yet), and the fifty-move rule becomes a no-progress limit that grows
-        as pieces leave the board. That leaves three draws only: insufficient material, the
+        Here most of those are gone. Stalemate is a win for the side that cannot move, because
+        shutting down every legal move without delivering mate is the attacker&apos;s mistake, so
+        the attacker pays for it. A third repetition loses for whoever plays it, so a losing side
+        can no longer escape by checking forever. Insufficient material counts only when the two
+        Popes stand alone (not final yet), and the fifty-move rule becomes a no-progress limit that
+        grows as pieces leave the board. That leaves three draws only: insufficient material, the
         no-progress limit and agreement.
       </p>
     </>

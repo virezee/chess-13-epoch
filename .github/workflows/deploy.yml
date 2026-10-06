@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   worker:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1

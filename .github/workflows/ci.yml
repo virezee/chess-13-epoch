@@ -2,9 +2,9 @@ name: CI
 run-name: CI on ${{ github.ref_name }} by @${{ github.actor }}
 on:
   push:
-    branches: [main]
+    branches: [main, develop, 'release/**']
   pull_request:
-    branches: [main]
+    branches: [main, develop, 'release/**']
 jobs:
   lint:
     runs-on: ubuntu-latest
